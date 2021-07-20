@@ -2,7 +2,7 @@
 -- Credit to HP Bar Writer by Kijan
 --[[LUAStart
 className = "MeasurementToken";
-versionNumber = "4.1.0";
+versionNumber = "4.1.1";
 scaleMultiplierX = 1.0;
 scaleMultiplierY = 1.0;
 scaleMultiplierZ = 1.0;
@@ -1034,7 +1034,7 @@ LUAStop--lua]]
 XMLStop--xml]]
 
 className = "MiniInjector";
-versionNumber = "4.1.0";
+versionNumber = "4.1.1";
 finishedLoading = false;
 debuggingEnabled = false;
 autoCalibrateEnabled = false;
@@ -1384,6 +1384,7 @@ function onCollisionEnter(collision_info)
         max_distance = 10,
         debug        = false,
     });
+    local attemptCount = 1
     for _, hitTable in ipairs(hitList) do
         -- This hit makes sure the injector is the first object directly below the mini
         if hitTable ~= nil and hitTable.hit_object == self then
@@ -1397,6 +1398,7 @@ function onCollisionEnter(collision_info)
                         print("[00ff00]Injecting[-] mini " .. object.getName() .. ".");
                     end
                     injectToken(object);
+                    break;
                 end
             elseif self.getRotationValue() == "[ff0000]REMOVE[-]" then
                 if object.getVar("className") == "MeasurementToken" then
@@ -1406,16 +1408,18 @@ function onCollisionEnter(collision_info)
                     object.call("destroyMoveToken")
                     object.setLuaScript("")
                     object.reload();
+                    break;
                 end
             else
                 error("Invalid rotation.")
+                break;
             end
         else
+            attemptCount = attemptCount + 1
             if (debuggingEnabled) then
-                print("Did not find injector.");
+                print("Did not find injector, index "..tostring(attemptCount)..".");
             end
         end
-        break;
     end
 end
 
