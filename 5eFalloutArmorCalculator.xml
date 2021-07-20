@@ -1,0 +1,250 @@
+<Defaults>
+    <ToggleButton fontSize="23"
+                  fontStyle="Bold"
+          	      colors="rgb(0.9,0.9,0.9)|rgb(0.7,0.7,0.7)|rgb(0.5,0.5,0.5)|rgb(1,1,1)"
+                  onValueChanged="updateIsOn"/>
+    <Dropdown onValueChanged="updateText"
+              fontSize="12"
+              fontStyle="Bold"/>
+    <ToggleGroup allowSwitchOff="true"/>
+    <InputField onEndEdit="updateText"
+                characterValidation="Integer"
+                fontSize="30"
+                fontStyle="Bold"/>
+    <Panel rotation="0 0 180"
+           scale="0.5 0.5 0.5"/>
+</Defaults>
+
+<!-- DEX -->
+<Panel position="133 -146 -12.5">
+      <TableLayout width="250" height="100">
+      <!-- Row 1 -->
+      <Row>
+          <Cell><Text fontSize="25"
+                      fontStyle="Bold">Dex Mod</Text></Cell>
+          <Cell><Text fontSize="25"
+                      fontStyle="Bold">AC Bonus</Text></Cell>
+      </Row>
+      <!-- Row 2 -->
+      <Row>
+          <Cell><InputField id="xml_if_dex_mod"
+                            characterLimit="4"
+                            placeholder="" width="100"></InputField></Cell>
+          <Cell><InputField id="xml_if_ac_bonus"
+                            characterLimit="4"
+                            placeholder="" width="100"></InputField></Cell>
+      </Row>
+    </TableLayout>
+</Panel>
+
+<!-- HELMET -->
+<Panel position="-70 -135 -12.5">
+    <VerticalLayout width="110" height="45">
+        <HorizontalLayout>
+            <ToggleGroup>
+                <HorizontalLayout>
+                    <ToggleButton id="xml_tb_helmet_l">L</ToggleButton>
+                    <ToggleButton id="xml_tb_helmet_h">H</ToggleButton>
+                </HorizontalLayout>
+            </ToggleGroup>
+        </HorizontalLayout>
+    </VerticalLayout>
+</Panel>
+
+<!-- CHEST -->
+<Panel position="100 20 -12.5">
+    <VerticalLayout width="225" height="110">
+        <HorizontalLayout>
+            <ToggleGroup id="xml_tg_chest">
+                <HorizontalLayout>
+                    <ToggleButton id="xml_tb_chest_l">L</ToggleButton>
+                    <ToggleButton id="xml_tb_chest_m">M</ToggleButton>
+                    <ToggleButton id="xml_tb_chest_h">H</ToggleButton>
+                </HorizontalLayout>
+            </ToggleGroup>
+        </HorizontalLayout>
+        <Dropdown id="xml_dd_chest_material">
+            <Option selected="true">Standard Material</Option>
+            <Option>Asbestos Lined</Option>
+            <Option>Heavy Build</Option>
+            <Option>Lead Lined</Option>
+            <Option>Light Build</Option>
+            <Option>Non-Conducting</Option>
+            <Option>Thermal Lined</Option>
+            <Option>Toughened</Option>
+        </Dropdown>
+        <Dropdown id="xml_dd_chest_mod">
+            <Option selected="true">No Modifications</Option>
+            <Option>Dense</Option>
+            <Option>Spiked</Option>
+            <Option>Hacking module (Robot)</Option>
+            <Option>Radiation Coils (Robot)</Option>
+            <Option>Resistance Field (Robot)</Option>
+            <Option>Sensor Array (Robot)</Option>
+            <Option>Stealth Assist Field (Robot)</Option>
+            <Option>Tesla Coils (Robot)</Option>
+        </Dropdown>
+    </VerticalLayout>
+</Panel>
+
+<!-- LEFT ARM -->
+<Panel position="140 -90 -12.5">
+    <VerticalLayout width="225" height="110">
+        <HorizontalLayout>
+            <ToggleGroup id="xml_tg_leftarm">
+                <HorizontalLayout>
+                    <ToggleButton id="xml_tb_leftarm_l">L</ToggleButton>
+                    <ToggleButton id="xml_tb_leftarm_m">M</ToggleButton>
+                    <ToggleButton id="xml_tb_leftarm_h">H</ToggleButton>
+                </HorizontalLayout>
+            </ToggleGroup>
+        </HorizontalLayout>
+        <Dropdown id="xml_dd_leftarm_material">
+            <Option selected="true">Standard Material</Option>
+            <Option>Asbestos Lined</Option>
+            <Option>Heavy Build</Option>
+            <Option>Lead Lined</Option>
+            <Option>Light Build</Option>
+            <Option>Non-Conducting</Option>
+            <Option>Thermal Lined</Option>
+            <Option>Toughened</Option>
+        </Dropdown>
+        <Dropdown id="xml_dd_leftarm_mod">
+            <Option selected="true">No Modifications</Option>
+            <Option>Braced</Option>
+            <Option>Brawling</Option>
+            <Option>Grappling Hook</Option>
+            <Option>Larceny Module (Robot)</Option>
+        </Dropdown>
+    </VerticalLayout>
+</Panel>
+
+<!-- RIGHT ARM -->
+<Panel position="-140 -87 -12.5">
+    <VerticalLayout width="225" height="110">
+        <HorizontalLayout>
+            <ToggleGroup id="xml_tg_rightarm">
+                <HorizontalLayout>
+                    <ToggleButton id="xml_tb_rightarm_l">L</ToggleButton>
+                    <ToggleButton id="xml_tb_rightarm_m">M</ToggleButton>
+                    <ToggleButton id="xml_tb_rightarm_h">H</ToggleButton>
+                </HorizontalLayout>
+            </ToggleGroup>
+        </HorizontalLayout>
+        <Dropdown id="xml_dd_rightarm_material">
+            <Option selected="true">Standard Material</Option>
+            <Option>Asbestos Lined</Option>
+            <Option>Heavy Build</Option>
+            <Option>Lead Lined</Option>
+            <Option>Light Build</Option>
+            <Option>Non-Conducting</Option>
+            <Option>Thermal Lined</Option>
+            <Option>Toughened</Option>
+        </Dropdown>
+        <Dropdown id="xml_dd_rightarm_mod">
+            <Option selected="true">No Modifications</Option>
+            <Option>Braced</Option>
+            <Option>Brawling</Option>
+            <Option>Grappling Hook</Option>
+            <Option>Larceny Module (Robot)</Option>
+        </Dropdown>
+    </VerticalLayout>
+</Panel>
+
+<!-- LEFT LEG -->
+<Panel position="100 125 -12.5">
+    <VerticalLayout width="225" height="110">
+        <HorizontalLayout>
+            <ToggleGroup id="xml_tg_leftleg">
+                <HorizontalLayout>
+                    <ToggleButton id="xml_tb_leftleg_l">L</ToggleButton>
+                    <ToggleButton id="xml_tb_leftleg_m">M</ToggleButton>
+                    <ToggleButton id="xml_tb_leftleg_h">H</ToggleButton>
+                </HorizontalLayout>
+            </ToggleGroup>
+        </HorizontalLayout>
+        <Dropdown id="xml_dd_leftleg_material">
+            <Option selected="true">Standard Material</Option>
+            <Option>Asbestos Lined</Option>
+            <Option>Heavy Build</Option>
+            <Option>Lead Lined</Option>
+            <Option>Light Build</Option>
+            <Option>Non-Conducting</Option>
+            <Option>Thermal Lined</Option>
+            <Option>Toughened</Option>
+        </Dropdown>
+        <Dropdown id="xml_dd_leftleg_mod">
+            <Option selected="true">No Modifications</Option>
+            <Option>Cushioned</Option>
+            <Option>Muffled</Option>
+            <Option>Hydraulic Frame (Robot)</Option>
+            <Option>Robotic Legs (Robot)</Option>
+            <Option>Thrusters (Robot)</Option>
+            <Option>Treads (Robot)</Option>
+        </Dropdown>
+    </VerticalLayout>
+</Panel>
+
+<!-- RIGHT LEG -->
+<Panel position="-100 125 -12.5">
+    <VerticalLayout width="225" height="110">
+        <HorizontalLayout>
+            <ToggleGroup id="xml_tg_rightleg">
+                <HorizontalLayout>
+                    <ToggleButton id="xml_tb_rightleg_l">L</ToggleButton>
+                    <ToggleButton id="xml_tb_rightleg_m">M</ToggleButton>
+                    <ToggleButton id="xml_tb_rightleg_h">H</ToggleButton>
+                </HorizontalLayout>
+            </ToggleGroup>
+        </HorizontalLayout>
+        <Dropdown id="xml_dd_rightleg_material">
+            <Option selected="true">Standard Material</Option>
+            <Option>Asbestos Lined</Option>
+            <Option>Heavy Build</Option>
+            <Option>Lead Lined</Option>
+            <Option>Light Build</Option>
+            <Option>Non-Conducting</Option>
+            <Option>Thermal Lined</Option>
+            <Option>Toughened</Option>
+        </Dropdown>
+        <Dropdown id="xml_dd_rightleg_mod">
+            <Option selected="true">No Modifications</Option>
+            <Option>Cushioned</Option>
+            <Option>Muffled</Option>
+            <Option>Hydraulic Frame (Robot)</Option>
+            <Option>Robotic Legs (Robot)</Option>
+            <Option>Thrusters (Robot)</Option>
+            <Option>Treads (Robot)</Option>
+        </Dropdown>
+    </VerticalLayout>
+</Panel>
+
+<!-- SHIELD -->
+<Panel position="-1 -25 -12.5">
+    <VerticalLayout width="110" height="45">
+        <HorizontalLayout>
+            <ToggleGroup>
+                <HorizontalLayout>
+                    <ToggleButton id="xml_tb_shield">SHIELD</ToggleButton>
+                </HorizontalLayout>
+            </ToggleGroup>
+        </HorizontalLayout>
+    </VerticalLayout>
+</Panel>
+
+<!-- RESULTS -->
+<Panel position="-115 -30 -12.5" width="200" height="45">
+    <Text fontSize="30"
+          fontStyle="Bold">RESULTS</Text>
+</Panel>
+<Panel position="-115 -20 -12.5" width="200" height="45">
+    <Text id="xml_text_armor_class"
+          fontSize="20"
+          fontStyle="Bold">Armor Class: ???</Text>
+</Panel>
+<Panel position="-120 60 -12.5" width="300" height="300">
+    <Text id="xml_text_extra_stuff"
+          fontSize="15"
+          alignment="UpperLeft"
+          verticalOverflow="Overflow">Extra Stuff Here</Text>
+</Panel>
