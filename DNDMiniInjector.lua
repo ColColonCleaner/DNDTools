@@ -2,7 +2,7 @@
 -- Credit to HP Bar Writer by Kijan
 --[[LUAStart
 className = "MeasurementToken";
-versionNumber = "4.1.1";
+versionNumber = "4.1.6";
 scaleMultiplierX = 1.0;
 scaleMultiplierY = 1.0;
 scaleMultiplierZ = 1.0;
@@ -236,9 +236,9 @@ function loadStageTwo()
     self.UI.setAttribute("AM", "textColor", options.aboveMax == true and "#AA2222" or "#FFFFFF")
 
     self.UI.setAttribute("InitiativeIncludeToggle", "textColor", options.initSettingsIncluded == true and "#AA2222" or "#FFFFFF")
-    if options.initSettingsRolling == true and player == true then
-        options.initSettingsRolling = false
-    end
+    -- if options.initSettingsRolling == true and player == true then
+    --     options.initSettingsRolling = false
+    -- end
     self.UI.setAttribute("InitiativeRollingToggle", "textColor", options.initSettingsRolling == true and "#AA2222" or "#FFFFFF")
 
     if options.showBaseButtons == true then
@@ -308,6 +308,11 @@ function loadStageTwo()
     rebuildContextMenu()
 
     updateHighlight()
+
+
+    self.ignore_fog_of_war = player
+    self.auto_raise = true
+    self.interactable = true
 
     onUpdateScale = 0.0
     finishedLoading = true
@@ -403,6 +408,7 @@ end
 
 function togglePlayer()
     player = not player;
+    self.ignore_fog_of_war = player
     self.UI.setAttribute("PlayerCharToggle", "textColor", player == true and "#AA2222" or "#FFFFFF")
     if player == true then
         resetInitiative()
@@ -432,20 +438,20 @@ function toggleInitiativeInclude()
 end
 
 function toggleInitiativeRolling()
-    if player == true then
-        options.initSettingsRolling = false
-        broadcastToAll("Player characters enter initiative manually.", {1,1,1})
-        return
-    else
-        options.initSettingsRolling = not options.initSettingsRolling;
-        if options.initSettingsRolling == true then
-            options.initRealActive = false
-            options.initRealValue = 0
-            options.initMockActive = false
-            options.initMockValue = 0
-        end
-        self.UI.setAttribute("InitiativeRollingToggle", "textColor", options.initSettingsRolling == true and "#AA2222" or "#FFFFFF")
+    -- if player == true then
+    --     options.initSettingsRolling = false
+    --     broadcastToAll("Player characters enter initiative manually.", {1,1,1})
+    --     return
+    -- else
+    -- end
+    options.initSettingsRolling = not options.initSettingsRolling;
+    if options.initSettingsRolling == true then
+        options.initRealActive = false
+        options.initRealValue = 0
+        options.initMockActive = false
+        options.initMockValue = 0
     end
+    self.UI.setAttribute("InitiativeRollingToggle", "textColor", options.initSettingsRolling == true and "#AA2222" or "#FFFFFF")
 end
 
 function calibrateScale()
@@ -559,6 +565,8 @@ function createMoveToken(mcolor, mtoken)
     moveToken.setVar("measuredObject", mtoken);
     moveToken.setVar("myPlayer", mcolor);
     moveToken.setVar("className", "MeasurementToken_Move");
+    moveToken.ignore_fog_of_war = player;
+    moveToken.interactable = false;
     moveButtonParams = {
         click_function = "onLoad",
         function_owner = self,
@@ -568,8 +576,10 @@ function createMoveToken(mcolor, mtoken)
         height = 0,
         font_size = 600
     }
+
     moveButton = moveToken.createButton(moveButtonParams);
     moveToken.setLuaScript("    function onUpdate() " ..
+                           "        self.interactable = false " ..
                            "        local mypos = self.getPosition() " ..
                            "        if measuredObject == nil or measuredObject.held_by_color == nil then " ..
                            "            destroyObject(self); " ..
@@ -671,14 +681,17 @@ end
 function onEndEdit(player, value, id)
     if id == "increment" then
         options.incrementBy = tonumber(value)
+        self.UI.setAttribute("increment", "text", options.incrementBy)
     elseif id == "InitModInput" then
         options.initSettingsMod = tonumber(value)
+        self.UI.setAttribute("InitModInput", "text", options.initSettingsMod)
     elseif id == "InitValueInput" then
         options.initSettingsValue = tonumber(value)
         options.initRealActive = false
         options.initRealValue = 0
         options.initMockActive = false
         options.initMockValue = 0
+        self.UI.setAttribute("InitValueInput", "text", options.initSettingsValue)
     end
 end
 
@@ -1034,7 +1047,7 @@ LUAStop--lua]]
 XMLStop--xml]]
 
 className = "MiniInjector";
-versionNumber = "4.1.1";
+versionNumber = "4.1.6";
 finishedLoading = false;
 debuggingEnabled = false;
 autoCalibrateEnabled = false;
@@ -1425,6 +1438,7 @@ end
 
 function injectToken(object)
     local assets = self.UI.getCustomAssets()
+    object.UI.setCustomAssets(assets)
     local script = self.getLuaScript()
     local xml = script:sub(script:find("XMLStart")+8, script:find("XMLStop")-1)
     local newScript = script:sub(script:find("LUAStart")+8, script:find("LUAStop")-1)
