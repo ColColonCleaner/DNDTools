@@ -1,10 +1,11 @@
 local className = "WallSpawner";
-local versionNumber = "1.5";
+versionNumber = "1.7";
 local wallHeight = 1.0;
 local wallOffset = 0;
 local enabled = 0;
 local firstPoint = nil;
 local secondPoint = nil;
+local thirdPoint = nil;
 local debuggingEnabled = true;
 
 function onSave()
@@ -137,6 +138,19 @@ function refreshButtons()
             color = {0,0,0},
             font_color = {1,1,1}
         });
+    elseif enabled == 4 then
+        self.createButton({
+            label = "BLOCK",
+            click_function = "buttonClick_toggleEnabled",
+            function_owner = self,
+            position = {0,0.2,-0.8},
+            rotation = {0,180,0},
+            height = 350,
+            width = 800,
+            font_size = 250,
+            color = {0,0,0},
+            font_color = {1,1,1}
+        });
     else
         self.createButton({
             label = "OFF",
@@ -189,10 +203,11 @@ end
 
 function buttonClick_toggleEnabled()
     enabled = enabled + 1;
-    if enabled > 3 then
+    if enabled > 4 then
         enabled = 0;
         firstPoint = nil;
         secondPoint = nil;
+        thirdPoint = nil;
     end
     refreshButtons();
 end
@@ -275,12 +290,89 @@ function onPlayerPing(player, position)
         });
         newWall.setLock(true);
         newWall.setColorTint(self.getColorTint());
-    elseif enabled ~= 0 then
+        firstPoint = nil;
+        secondPoint = nil;
+        thirdPoint = nil;
+    elseif enabled == 4 then
         if firstPoint == nil then
-            firstPoint = position;
+            firstPoint = vector(position.x, 0, position.z);
             return
         end
-        secondPoint = position;
+        if secondPoint == nil then
+            secondPoint = vector(position.x, 0, position.z);
+            return
+        end
+        thirdPoint = vector(position.x, 0, position.z);
+        local avgX = (firstPoint.x + secondPoint.x) / 2.0;
+        local avgZ = (firstPoint.z + secondPoint.z) / 2.0;
+        local startloc = self.getPosition();
+        local hitList = Physics.cast({
+            origin       = self.getBounds().center,
+            direction    = {0,-1,0},
+            type         = 1,
+            max_distance = 10,
+            debug        = false,
+        });
+        for _, hitTable in ipairs(hitList) do
+            -- Find the first object directly below the mini
+            if hitTable ~= nil and hitTable.point ~= nil and hitTable.hit_object ~= self then
+                startloc = hitTable.point;
+                break;
+            else
+                if (debuggingEnabled) then
+                    print("Did not find object below spawner.");
+                end
+            end
+        end
+        local avgY = startloc.y;
+        -- Account for offset. Raise Y by that offset multiplied by the grid size.
+        avgY = avgY + (wallOffset * Grid.sizeX);
+        local difX = secondPoint.x - firstPoint.x;
+        local difZ = secondPoint.z - firstPoint.z;
+
+        -- Length of the rectangle is the distance between first two points
+        local length = firstPoint:distance(secondPoint);
+        print("length: " .. length);
+        -- Width of the rectangle is the distance of third point from the line between first two points.
+        local widthDenominator = math.sqrt(math.pow(secondPoint.x - firstPoint.x, 2) + math.pow(secondPoint.z - firstPoint.z, 2));
+        local width =  math.abs(((secondPoint.x - firstPoint.x)*(firstPoint.z - thirdPoint.z)) - ((firstPoint.x - thirdPoint.x)*(secondPoint.z - firstPoint.z))) / widthDenominator;
+        print("width: " .. width);
+        local directionWidth = (((secondPoint.x - firstPoint.x)*(firstPoint.z - thirdPoint.z)) - ((firstPoint.x - thirdPoint.x)*(secondPoint.z - firstPoint.z))) / widthDenominator;
+        --print("directionWidth: " .. directionWidth);
+        local vect = Vector.between(firstPoint, secondPoint):normalized();
+        local angle = vect:heading('y');
+        vect = vect:rotateOver('y', 90 * (directionWidth / math.abs(directionWidth))):scale(width);
+        print("new_vectx: " .. vect.x);
+        print("new_vectz: " .. vect.z);
+        print("new_vecty: " .. vect.y);
+        print("new_angle: " .. vect:heading('y'));
+        local boundryPoint = firstPoint:add(vect);
+        print("boundry_x: " .. boundryPoint.x);
+        print("boundry_z: " .. boundryPoint.z);
+        print("boundry_y: " .. boundryPoint.y);
+        local midPoint = Vector.between(boundryPoint, secondPoint):scale(0.5):add(boundryPoint);
+        print("midPoint_x: " .. midPoint.x);
+        print("midPoint_z: " .. midPoint.z);
+        print("midPoint_y: " .. midPoint.y);
+        local newWall = spawnObject({
+            type = "BlockSquare",
+            position = {midPoint.x, avgY + (wallHeight * Grid.sizeX / 2.0), midPoint.z},
+            rotation = {0, angle, 0},
+            scale = {width, wallHeight * Grid.sizeX, length},
+            sound = false,
+            snap_to_grid = false
+        });
+        newWall.setLock(true);
+        newWall.setColorTint(self.getColorTint());
+        firstPoint = nil;
+        secondPoint = nil;
+        thirdPoint = nil;
+    elseif enabled ~= 0 then
+        if firstPoint == nil then
+            firstPoint = vector(position.x, 0, position.z);
+            return
+        end
+        secondPoint = vector(position.x, 0, position.z);
         local avgX = (firstPoint.x + secondPoint.x) / 2.0;
         local avgZ = (firstPoint.z + secondPoint.z) / 2.0;
         local startloc = self.getPosition();
@@ -322,9 +414,11 @@ function onPlayerPing(player, position)
         if enabled == 2 then
             firstPoint = secondPoint;
             secondPoint = nil;
+            thirdPoint = nil;
         else
             firstPoint = nil;
             secondPoint = nil;
+            thirdPoint = nil;
         end
     end
 end
