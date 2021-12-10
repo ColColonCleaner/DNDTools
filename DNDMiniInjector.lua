@@ -2,7 +2,7 @@
 -- Credit to HP Bar Writer by Kijan
 --[[LUAStart
 className = "MeasurementToken";
-versionNumber = "4.1.6";
+versionNumber = "4.2.3";
 scaleMultiplierX = 1.0;
 scaleMultiplierY = 1.0;
 scaleMultiplierZ = 1.0;
@@ -11,6 +11,7 @@ calibratedOnce = false;
 debuggingEnabled = false;
 onUpdateTriggerCount = 0;
 onUpdateScale = 1.0;
+loadTime = 1.0;
 
 health = {value = 10, max = 10}
 mana = {value = 10, max = 10}
@@ -18,6 +19,7 @@ extra = {value = 10, max = 10}
 
 player = false
 measureMove = false
+alternateDiag = false
 stabilizeOnDrop = false
 miniHighlight = "highlightNone"
 firstEdit = true
@@ -99,6 +101,7 @@ function onSave()
         statNames = statNames,
         player = player,
         measureMove = measureMove,
+        alternateDiag = alternateDiag,
         stabilizeOnDrop = stabilizeOnDrop,
         miniHighlight = miniHighlight
     })
@@ -153,6 +156,9 @@ function onLoad(save_state)
         if saved_data.measureMove ~= nil then
             measureMove = saved_data.measureMove;
         end
+        if saved_data.alternateDiag ~= nil then
+            alternateDiag = saved_data.alternateDiag;
+        end
         if saved_data.stabilizeOnDrop ~= nil then
             stabilizeOnDrop = saved_data.stabilizeOnDrop;
         end
@@ -163,6 +169,7 @@ function onLoad(save_state)
     self.setVar("className", "MeasurementToken")
     self.setVar("player", player)
     self.setVar("measureMove", measureMove)
+    self.setVar("alternateDiag", alternateDiag)
     self.setVar("stabilizeOnDrop", stabilizeOnDrop)
     self.setVar("miniHighlight", miniHighlight)
     if stabilizeOnDrop == true then
@@ -227,6 +234,7 @@ function loadStageTwo()
 
     self.UI.setAttribute("PlayerCharToggle", "textColor", player == true and "#AA2222" or "#FFFFFF")
     self.UI.setAttribute("MeasureMoveToggle", "textColor", measureMove == true and "#AA2222" or "#FFFFFF")
+    self.UI.setAttribute("AlternateDiagToggle", "textColor", alternateDiag == true and "#AA2222" or "#FFFFFF")
     self.UI.setAttribute("StabilizeToggle", "textColor", stabilizeOnDrop == true and "#AA2222" or "#FFFFFF")
     self.UI.setAttribute("HH", "textColor", options.hideHp == true and "#AA2222" or "#FFFFFF")
     self.UI.setAttribute("HM", "textColor", options.hideMana == true and "#AA2222" or "#FFFFFF")
@@ -256,6 +264,9 @@ function loadStageTwo()
                     calibrateScale()
                 end
                 -- grab ui settings
+                local injOptions = obj.getTable("options")
+                alternateDiag = injOptions.alternateDiag;
+                self.UI.setAttribute("AlternateDiagToggle", "textColor", alternateDiag == true and "#AA2222" or "#FFFFFF")
                 if player == true then
                     self.UI.setAttribute("progressBar", "visibility", "")
                     self.UI.setAttribute("progressBarS", "visibility", "")
@@ -267,9 +278,7 @@ function loadStageTwo()
                     self.UI.setAttribute("addSubS", "visibility", "")
                     self.UI.setAttribute("addSubE", "visibility", "")
                     self.UI.setAttribute("editPanel", "visibility", "")
-                    --self.UI.setAttribute("editPanel", "active", "false")
                 else
-                    local injOptions = obj.getTable("options")
                     if injOptions.hideBar == true then
                         self.UI.setAttribute("progressBar", "visibility", "Black")
                         self.UI.setAttribute("progressBarS", "visibility", "Black")
@@ -300,7 +309,6 @@ function loadStageTwo()
                         self.UI.setAttribute("editPanel", "visibility", "")
                     end
                 end
-                --self.UI.setAttribute("editPanel", "active", "false")
             end
         end
     end
@@ -315,8 +323,13 @@ function loadStageTwo()
     self.interactable = true
 
     onUpdateScale = 0.0
+    loadTime = os.clock()
     finishedLoading = true
     self.setVar("finishedLoading", true)
+end
+
+function onPlayerConnect(player)
+    Wait.frames(updateHighlight, 10000)
 end
 
 function changeHighlight(player, value, id)
@@ -419,6 +432,27 @@ end
 function toggleMeasure()
     measureMove = not measureMove;
     self.UI.setAttribute("MeasureMoveToggle", "textColor", measureMove == true and "#AA2222" or "#FFFFFF")
+end
+
+function toggleAlternateDiag()
+    Wait.frames(tad_Helper, 30);
+end
+function tad_Helper()
+    -- Look for the mini injector, if available
+    local allObjects = getAllObjects()
+    for _, obj in ipairs(allObjects) do
+        if obj ~= self and obj ~= nil then
+            local typeCheck = obj.getVar("className")
+            if typeCheck == "MiniInjector" then
+                local injOptions = obj.getTable("options")
+                alternateDiag = injOptions.alternateDiag;
+                self.UI.setAttribute("AlternateDiagToggle", "textColor", alternateDiag == true and "#AA2222" or "#FFFFFF")
+                return
+            end
+        end
+    end
+    alternateDiag = not alternateDiag;
+    self.UI.setAttribute("AlternateDiagToggle", "textColor", alternateDiag == true and "#AA2222" or "#FFFFFF")
 end
 
 function toggleStabilizeOnDrop()
@@ -564,6 +598,7 @@ function createMoveToken(mcolor, mtoken)
     mtoken.setVar("myMoveToken", moveToken);
     moveToken.setVar("measuredObject", mtoken);
     moveToken.setVar("myPlayer", mcolor);
+    moveToken.setVar("alternateDiag", alternateDiag);
     moveToken.setVar("className", "MeasurementToken_Move");
     moveToken.ignore_fog_of_war = player;
     moveToken.interactable = false;
@@ -579,7 +614,7 @@ function createMoveToken(mcolor, mtoken)
 
     moveButton = moveToken.createButton(moveButtonParams);
     moveToken.setLuaScript("    function onUpdate() " ..
-                           "        self.interactable = false " ..
+                           "        local finalDistance = 0 " ..
                            "        local mypos = self.getPosition() " ..
                            "        if measuredObject == nil or measuredObject.held_by_color == nil then " ..
                            "            destroyObject(self); " ..
@@ -590,14 +625,26 @@ function createMoveToken(mcolor, mtoken)
                            "        opos.y = opos.y-(Player[myPlayer].lift_height*5) " ..
                            "        mdiff = mypos - opos " ..
                            "        if oheld then " ..
-                           "            mDistance = math.abs(mdiff.x); " ..
-                           "            zDistance = math.abs(mdiff.z); " ..
-                           "            if zDistance > mDistance then " ..
-                           "                mDistance = zDistance; " ..
+                           "            if alternateDiag then " ..
+                           "                mDistance = math.abs(mdiff.x); " ..
+                           "                xDisGrid = math.floor(mDistance / Grid.sizeX + 0.5); " ..
+                           "                zDistance = math.abs(mdiff.z); " ..
+                           "                yDisGrid = math.floor(zDistance / Grid.sizeY + 0.5); " ..
+                           "                if xDisGrid > yDisGrid then " ..
+                           "                    finalDistance = math.floor(xDisGrid + yDisGrid/2.0) * 5.0; " ..
+                           "                else" ..
+                           "                    finalDistance = math.floor(yDisGrid + xDisGrid/2.0) * 5.0; " ..
+                           "                end " ..
+                           "            else " ..
+                           "                mDistance = math.abs(mdiff.x); " ..
+                           "                zDistance = math.abs(mdiff.z); " ..
+                           "                if zDistance > mDistance then " ..
+                           "                    mDistance = zDistance; " ..
+                           "                end " ..
+                           "                mDistance = mDistance * (5.0 / Grid.sizeX); " ..
+                           "                finalDistance = (math.floor((mDistance + 2.5) / 5.0) * 5); " ..
                            "            end " ..
-                           "            mDistance = mDistance * (5.0 / Grid.sizeX); " ..
-                           "            mDistance = (math.floor((mDistance + 2.5) / 5.0) * 5); " ..
-                           "            self.editButton({index = 0, label = tostring(mDistance)}) " ..
+                           "            self.editButton({index = 0, label = tostring(finalDistance)}) " ..
                            "        end " ..
                            "    end ")
 
@@ -953,8 +1000,8 @@ LUAStop--lua]]
             </Panel>
         </Panel>
     </VerticalLayout>
-    <Panel id="editPanel" height="1420" width="800" color="#330000FF" position="0 1180 0" active="False">
-        <ProgressBar id="blackBackground" visibility="" height="1420" width="800" showPercentageText="false" color="#330000FF" percentage="100" fillImageColor="#330000FF" position="0 -320 0"></ProgressBar>
+    <Panel id="editPanel" height="1520" width="800" color="#330000FF" position="0 1240 0" active="False">
+        <ProgressBar id="blackBackground" visibility="" height="1520" width="800" showPercentageText="false" color="#330000FF" percentage="100" fillImageColor="#330000FF" position="0 -320 0"></ProgressBar>
         <HorizontalLayout>
             <VerticalLayout>
                 <HorizontalLayout spacing="10" minheight="100">
@@ -967,9 +1014,12 @@ LUAStop--lua]]
                     <Text>Rotation</Text>
                     <Button id="addRotation" text="►" minwidth="90"></Button>
                 </HorizontalLayout>
+                <HorizontalLayout minheight="100">
+                    <Button id="PlayerCharToggle" onClick="togglePlayer" fontSize="70" text="Player Character" color="#000000FF"></Button>
+                </HorizontalLayout>
                 <HorizontalLayout minheight="160">
-                    <Button id="PlayerCharToggle" onClick="togglePlayer" fontSize="70" text="Player Char" color="#000000FF"></Button>
                     <Button id="MeasureMoveToggle" onClick="toggleMeasure" fontSize="70" text="Measure Moves" color="#000000FF"></Button>
+                    <Button id="AlternateDiagToggle" onClick="toggleAlternateDiag" fontSize="60" text="Alternate Diagonals" color="#000000FF"></Button>
                 </HorizontalLayout>
                 <HorizontalLayout minheight="160">
                     <Button id="StabilizeToggle" onClick="toggleStabilizeOnDrop" fontSize="70" text="Stable Mini" color="#000000FF"></Button>
@@ -1047,7 +1097,7 @@ LUAStop--lua]]
 XMLStop--xml]]
 
 className = "MiniInjector";
-versionNumber = "4.1.6";
+versionNumber = "4.2.3";
 finishedLoading = false;
 debuggingEnabled = false;
 autoCalibrateEnabled = false;
@@ -1065,6 +1115,7 @@ options = {
     hideAll = false,
     showAll = true,
     measureMove = false,
+    alternateDiag = false,
     playerChar = false,
     HP2Desc = false,
     hp = 10,
@@ -1114,16 +1165,6 @@ function onLoad(save_state)
                 for opt,_ in pairs(saved_data.options) do
                     if saved_data.options[opt] ~= nil then
                         options[opt] = saved_data.options[opt]
-                        if opt == "measureMove" or opt == "playerChar" or opt == "hideBar" or opt == "hideText" or opt == "editText" then
-                            if options[opt] then
-                                self.UI.setAttribute(opt, "value", "true")
-                                self.UI.setAttribute(opt, "text", "✘")
-                                self.UI.setAttribute(opt, "textColor", "#FFFFFF")
-                            else
-                                self.UI.setAttribute(opt, "value", "false")
-                                self.UI.setAttribute(opt, "text", "")
-                            end
-                        end
                     end
                 end
             end
@@ -1165,8 +1206,25 @@ function onLoad(save_state)
     self.setVar("finishedLoading", true);
     self.setName("DND Mini Injector " .. versionNumber);
 
+    Wait.frames(updateSettingUI, 10)
+
     if options.initActive == true then
         Wait.frames(rollInitiative, 120)
+    end
+end
+
+function updateSettingUI()
+    for opt,_ in pairs(options) do
+        if opt == "measureMove" or opt == "alternateDiag" or opt == "playerChar" or opt == "hideBar" or opt == "hideText" or opt == "editText" then
+            self.UI.setAttribute(opt, "textColor", "#FFFFFF")
+            if options[opt] then
+                self.UI.setAttribute(opt, "value", "true")
+                self.UI.setAttribute(opt, "text", "✘")
+            else
+                self.UI.setAttribute(opt, "value", "false")
+                self.UI.setAttribute(opt, "text", "")
+            end
+        end
     end
 end
 
@@ -1252,6 +1310,9 @@ function onUpdate()
                             updateEverythingIndex = updateEverythingIndex + 1;
                             injectToken(obj);
                             return;
+                        else
+                            -- Reload the token anyway. A quick way to reload all minis.
+                            obj.reload();
                         end
                     end
                 end
@@ -1273,6 +1334,7 @@ function onObjectSpawn(object)
         end
         if object.getVar("className") == "MeasurementToken" then
             object.call('resetScale')
+            object.call('toggleAlternateDiag')
         end
     end
     Wait.condition(setScaleFunc, dropWatch)
@@ -1302,6 +1364,9 @@ function toggleCheckBox(player, value, id)
     for i,j in pairs(getAllObjects()) do
         if j ~= self then
             if j.getLuaScript():find("StartXML") then
+                if id == "alternateDiag" then
+                    j.call('toggleAlternateDiag')
+                end
                 if j.getVar("player") then
                     if id == "hideBar" then
                         j.UI.setAttribute("progressBar", "visibility", "")
@@ -1333,7 +1398,6 @@ function toggleCheckBox(player, value, id)
                         j.UI.setAttribute("editPanel", "visibility", options[id] == true and "Black" or "")
                     end
                 end
-                j.UI.setAttribute("editPanel", "active", "false")
             end
         end
     end
@@ -1470,6 +1534,9 @@ function injectToken(object)
 
     if options.measureMove == true then
         newScript = newScript:gsub("measureMove = false", "measureMove = true")
+    end
+    if options.alternateDiag == true then
+        newScript = newScript:gsub("alternateDiag = false", "alternateDiag = true")
     end
     if options.playerChar == true then
         newScript = newScript:gsub("player = false", "player = true")
