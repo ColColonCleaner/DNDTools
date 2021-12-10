@@ -13,6 +13,17 @@
         visibility='Black'/>
 
     <Button id="measureMove"
+        position="-518 140 -60"
+        scale="0.2 0.2 0.2"
+        text=""
+        width="270"
+        height="210"
+        onClick="toggleCheckBox"
+        fontSize="180"
+        textColor="#FFFFFF"
+        color="#00000000"
+        visibility='Black'/>
+    <Button id="alternateDiag"
         position="-518 61 -60"
         scale="0.2 0.2 0.2"
         text=""
