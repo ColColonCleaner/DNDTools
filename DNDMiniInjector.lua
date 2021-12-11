@@ -2,7 +2,7 @@
 -- Credit to HP Bar Writer by Kijan
 --[[LUAStart
 className = "MeasurementToken";
-versionNumber = "4.2.3";
+versionNumber = "4.5.0";
 scaleMultiplierX = 1.0;
 scaleMultiplierY = 1.0;
 scaleMultiplierZ = 1.0;
@@ -12,6 +12,7 @@ debuggingEnabled = false;
 onUpdateTriggerCount = 0;
 onUpdateScale = 1.0;
 loadTime = 1.0;
+saveVersion = 1;
 
 health = {value = 10, max = 10}
 mana = {value = 10, max = 10}
@@ -22,6 +23,7 @@ measureMove = false
 alternateDiag = false
 stabilizeOnDrop = false
 miniHighlight = "highlightNone"
+highlightToggle = true
 firstEdit = true
 
 options = {
@@ -57,7 +59,9 @@ end
 
 function getInitiative(inputActive)
     if options.initRealActive == true then
-        --print(self.getName() .. ' init real cache ' .. options.initRealValue)
+        if debuggingEnabled then
+            print(self.getName() .. ' init real cache ' .. options.initRealValue)
+        end
         return options.initRealValue
     end
     if inputActive == true then
@@ -67,16 +71,22 @@ function getInitiative(inputActive)
         else
             options.initRealValue = calculateInitiative()
         end
-        --print(self.getName() .. ' init real calc' .. options.initRealValue)
+        if debuggingEnabled then
+            print(self.getName() .. ' init real calc' .. options.initRealValue)
+        end
         return options.initRealValue
     end
     if options.initMockActive == true then
-        --print(self.getName() .. ' init mock cache ' .. options.initMockValue)
+        if debuggingEnabled then
+            print(self.getName() .. ' init mock cache ' .. options.initMockValue)
+        end
         return options.initMockValue
     end
     options.initMockActive = true
     options.initMockValue = calculateInitiative()
-    --print(self.getName() .. ' init mock calc ' .. options.initMockValue)
+    if debuggingEnabled then
+        print(self.getName() .. ' init mock calc ' .. options.initMockValue)
+    end
     return options.initMockValue
 end
 
@@ -89,6 +99,10 @@ function calculateInitiative()
 end
 
 function onSave()
+    saveVersion = saveVersion + 1
+    if debuggingEnabled then
+        print(self.getName() .. " saving, version " .. saveVersion .. ".")
+    end
     local save_state = JSON.encode({
         scale_multiplier_x = scaleMultiplierX,
         scale_multiplier_y = scaleMultiplierY,
@@ -103,14 +117,34 @@ function onSave()
         measureMove = measureMove,
         alternateDiag = alternateDiag,
         stabilizeOnDrop = stabilizeOnDrop,
-        miniHighlight = miniHighlight
+        miniHighlight = miniHighlight,
+        highlightToggle = highlightToggle,
+        saveVersion = saveVersion
     })
     return save_state
 end
 
 function onLoad(save_state)
     if save_state ~= "" then
-        saved_data = JSON.decode(save_state)
+        -- ALRIGHTY, let's see which state data we need to use
+        local saved_data = JSON.decode(save_state)
+        local bestVersion = 0
+        if saved_data.saveVersion ~= nil then
+            bestVersion = saved_data.saveVersion
+        end
+        states = self.getStates()
+        if states ~= nil then
+            for _, s in pairs(states) do
+                test_data = JSON.decode(s.lua_script_state)
+                if test_data ~= nil and test_data.saveVersion ~= nil and test_data.saveVersion > bestVersion then
+                    saved_data = test_data
+                    bestVersion = test_data.saveVersion
+                    if debuggingEnabled then
+                        print(self.getName() .. " best version: " .. bestVersion)
+                    end
+                end
+            end
+        end
         if saved_data.health then
             for heal,_ in pairs(health) do
                 health[heal] = saved_data.health[heal]
@@ -165,6 +199,15 @@ function onLoad(save_state)
         if saved_data.miniHighlight ~= nil then
             miniHighlight = saved_data.miniHighlight;
         end
+        if saved_data.highlightToggle ~= nil then
+            highlightToggle = saved_data.highlightToggle;
+        end
+        if saved_data.saveVersion ~= nil then
+            saveVersion = saved_data.saveVersion;
+            if debuggingEnabled then
+                print(self.getName() .. " loading, version " .. saveVersion .. ".")
+            end
+        end
     end
     self.setVar("className", "MeasurementToken")
     self.setVar("player", player)
@@ -172,6 +215,7 @@ function onLoad(save_state)
     self.setVar("alternateDiag", alternateDiag)
     self.setVar("stabilizeOnDrop", stabilizeOnDrop)
     self.setVar("miniHighlight", miniHighlight)
+    self.setVar("highlightToggle", highlightToggle)
     if stabilizeOnDrop == true then
         Wait.frames(stabilize, 1);
     end
@@ -244,9 +288,6 @@ function loadStageTwo()
     self.UI.setAttribute("AM", "textColor", options.aboveMax == true and "#AA2222" or "#FFFFFF")
 
     self.UI.setAttribute("InitiativeIncludeToggle", "textColor", options.initSettingsIncluded == true and "#AA2222" or "#FFFFFF")
-    -- if options.initSettingsRolling == true and player == true then
-    --     options.initSettingsRolling = false
-    -- end
     self.UI.setAttribute("InitiativeRollingToggle", "textColor", options.initSettingsRolling == true and "#AA2222" or "#FFFFFF")
 
     if options.showBaseButtons == true then
@@ -317,28 +358,38 @@ function loadStageTwo()
 
     updateHighlight()
 
-
     self.ignore_fog_of_war = player
     self.auto_raise = true
     self.interactable = true
 
     onUpdateScale = 0.0
     loadTime = os.clock()
+
+    onSave()
+
     finishedLoading = true
     self.setVar("finishedLoading", true)
 end
 
 function onPlayerConnect(player)
-    Wait.frames(updateHighlight, 10000)
+    Wait.frames(updateHighlight, 5000)
 end
 
 function changeHighlight(player, value, id)
     miniHighlight = id
+    highlightToggle = true
     updateHighlight(miniHighlight)
 end
 
+function toggleHighlight(player, value, id)
+    highlightToggle = not highlightToggle
+    updateHighlight()
+end
+
 function updateHighlight()
-    if miniHighlight == "highlightNone" then
+    if highlightToggle == false then
+        self.highlightOff()
+    elseif miniHighlight == "highlightNone" then
         self.highlightOff()
     elseif miniHighlight == "highlightWhite" then
         self.highlightOn(Color.White)
@@ -675,6 +726,8 @@ function adjustHP(difference)
     if player == false and health.value <= 0 and options.initSettingsIncluded == true and options.initRealActive == true then
         options.initSettingsIncluded = false
         self.UI.setAttribute("InitiativeIncludeToggle", "textColor", options.initSettingsIncluded == true and "#AA2222" or "#FFFFFF")
+        miniHighlight = "highlightNone"
+        updateHighlight()
     end
     self.UI.setAttribute("hpText", "text", health.value .. "/" .. health.max)
     self.UI.setAttribute("progressBar", "percentage", health.value / health.max * 100)
@@ -689,6 +742,8 @@ function setHP(newHP)
     if player == false and health.value <= 0 and options.initSettingsIncluded == true and options.initRealActive == true then
         options.initSettingsIncluded = false
         self.UI.setAttribute("InitiativeIncludeToggle", "textColor", options.initSettingsIncluded == true and "#AA2222" or "#FFFFFF")
+        miniHighlight = "highlightNone"
+        updateHighlight()
     end
     self.UI.setAttribute("hpText", "text", health.value .. "/" .. health.max)
     self.UI.setAttribute("progressBar", "percentage", health.value / health.max * 100)
@@ -739,6 +794,9 @@ function onEndEdit(player, value, id)
         options.initMockActive = false
         options.initMockValue = 0
         self.UI.setAttribute("InitValueInput", "text", options.initSettingsValue)
+        if self.getVar("player") == true then
+            print(self.getName() .. " set initiative " .. options.initSettingsValue .. ".")
+        end
     end
 end
 
@@ -920,7 +978,7 @@ function onClick(player_in, value, id)
     self.UI.setAttribute("manaText", "textColor", "#FFFFFF")
 end
 
-function onCollisionEnter(a)
+function onCollisionEnter(a) -- if colliding with a status token, destroy it and apply to UI
     local newState = a.collision_object.getName()
     if statNames[newState] ~= nil then
         statNames[newState] = true
@@ -1083,6 +1141,7 @@ LUAStop--lua]]
                 <Button id="highlightPurple" onClick="changeHighlight" minwidth="200" minheight="90" fontSize="70" text="" color="Purple"></Button>
                 <Button id="highlightPink" onClick="changeHighlight" minwidth="200" minheight="90" fontSize="70" text="" color="Pink"></Button>
                 <Button id="highlightBlack" onClick="changeHighlight" minwidth="200" minheight="90" fontSize="70" text="" color="Black"></Button>
+                <Button id="highlightToggle" onClick="toggleHighlight" minwidth="200" minheight="180" fontSize="50" text="Toggle" color="Grey"></Button>
             </VerticalLayout>
         </HorizontalLayout>
     </Panel>
@@ -1097,9 +1156,10 @@ LUAStop--lua]]
 XMLStop--xml]]
 
 className = "MiniInjector";
-versionNumber = "4.2.3";
+versionNumber = "4.5.0";
 finishedLoading = false;
 debuggingEnabled = false;
+pingInitMinis = true;
 autoCalibrateEnabled = false;
 injectEverythingAllowed = false;
 injectEverythingActive = false;
@@ -1132,6 +1192,7 @@ initFigures = {};
 function onSave()
     local save_state = JSON.encode({
         debugging_enabled = debuggingEnabled,
+        ping_init_minis = pingInitMinis,
         auto_calibrate_enabled = autoCalibrateEnabled,
         options = options,
     })
@@ -1171,6 +1232,9 @@ function onLoad(save_state)
             if saved_data.debugging_enabled ~= nil then
                 debuggingEnabled = saved_data.debugging_enabled;
             end
+            if saved_data.ping_init_minis ~= nil then
+                pingInitMinis = saved_data.ping_init_minis;
+            end
             if saved_data.auto_calibrate_enabled ~= nil then
                 autoCalibrateEnabled = saved_data.auto_calibrate_enabled;
             end
@@ -1203,14 +1267,18 @@ function onLoad(save_state)
 
     self.setVar("className", "MiniInjector");
     rebuildContextMenu();
+    finishedLoading = true
     self.setVar("finishedLoading", true);
     self.setName("DND Mini Injector " .. versionNumber);
 
+    addHotkey("Initiative Forward", forwardInitiative, boolean)
+    addHotkey("Initiative Backward", backwardInitiative, boolean)
+    addHotkey("Initiative Refresh", refreshInitiative, boolean)
+    addHotkey("Initiative Roll", rollInitiative, boolean)
+
     Wait.frames(updateSettingUI, 10)
 
-    if options.initActive == true then
-        Wait.frames(rollInitiative, 120)
-    end
+    Wait.frames(updateEverything, 120)
 end
 
 function updateSettingUI()
@@ -1235,6 +1303,11 @@ function rebuildContextMenu()
     else
         self.addContextMenuItem("[ ] Debugging", toggleDebug);
     end
+    if (pingInitMinis) then
+        self.addContextMenuItem("[X] Ping Init Minis", togglePingInitMinis);
+    else
+        self.addContextMenuItem("[ ] Ping Init Minis", togglePingInitMinis);
+    end
     if (autoCalibrateEnabled) then
         self.addContextMenuItem("[X] Auto-Calibrate", toggleAutoCalibrate);
     else
@@ -1246,6 +1319,11 @@ end
 
 function toggleDebug()
     debuggingEnabled = not debuggingEnabled;
+    rebuildContextMenu();
+end
+
+function togglePingInitMinis()
+    pingInitMinis = not pingInitMinis;
     rebuildContextMenu();
 end
 
@@ -1320,24 +1398,37 @@ function onUpdate()
             updateEverythingActive = false;
             updateEverythingIndex = 1;
             print("[00ff00]All minis updated.[-]");
+            if options.initActive == true then
+                Wait.frames(rollInitiative, 60)
+            end
         end
     end
 end
 
 function onObjectSpawn(object)
+    if finishedLoading == false then
+        return
+    end
     local dropWatch = function()
         return object == nil or object.resting;
     end
-    local setScaleFunc = function()
+    local dropFunc = function()
         if object == nil then
             return
         end
         if object.getVar("className") == "MeasurementToken" then
-            object.call('resetScale')
-            object.call('toggleAlternateDiag')
+            tokenVersion = object.getVar("versionNumber");
+            if versionNumber ~= tokenVersion then
+                print("[00ff00]Updating[-] spawned mini.");
+                injectToken(object);
+                return;
+            else
+                object.call('resetScale')
+                object.call('toggleAlternateDiag')
+            end
         end
     end
-    Wait.condition(setScaleFunc, dropWatch)
+    Wait.condition(dropFunc, dropWatch)
 end
 
 function allOff()
@@ -1663,15 +1754,15 @@ function resetInitiative()
     setNotes("")
 end
 
-function refreshInitiative()
+function refreshInitiative(player)
     getInitiativeFigures()
     if options.initActive == true then
-        updateInitPlayer()
+        updateInitPlayer(player)
     end
     rebuildUI()
 end
 
-function rollInitiative()
+function rollInitiative(player)
     options.initActive = true
     getInitiativeFigures()
     if not checkPlayersSet() then
@@ -1686,18 +1777,31 @@ function rollInitiative()
         end
         options.initCurrentRound = 1
     else
-        updateInitPlayer()
+        updateInitPlayer(player)
     end
     rebuildUI()
     setInitiativeNotes()
 end
 
-function updateInitPlayer()
+function updateInitPlayer(player)
     local foundInitFigure = false
     local changedInitFigure = false
     --find the current player
     for _, figure in ipairs(initFigures) do
         if figure.guidValue == options.initCurrentGUID then
+            if player ~= nil and pingInitMinis then
+                figureObj = getObjectFromGUID(options.initCurrentGUID)
+                if player.team == nil then
+                    -- We're a color, not a player, assign the player object
+                    for _, loopPlayer in ipairs(Player.getPlayers()) do
+                        if loopPlayer.color == player then
+                           player = loopPlayer
+                           break
+                        end
+                    end
+                end
+                player.pingTable(figureObj.getBounds().center);
+            end
             -- no need for update, they are still present
             return
         end
@@ -1723,9 +1827,22 @@ function updateInitPlayer()
         end
         options.initCurrentRound = options.initCurrentRound + 1
     end
+    if changedInitFigure == true and pingInitMinis and player ~= nil then
+        figureObj = getObjectFromGUID(options.initCurrentGUID)
+        if player.team == nil then
+            -- We're a color, not a player, assign the player object
+            for _, loopPlayer in ipairs(Player.getPlayers()) do
+                if loopPlayer.color == player then
+                   player = loopPlayer
+                   break
+                end
+            end
+        end
+        player.pingTable(figureObj.getBounds().center);
+    end
 end
 
-function forwardInitiative()
+function forwardInitiative(player)
     if not options.initActive then
         print("Initiative must be active before navigating.")
         return
@@ -1736,13 +1853,13 @@ function forwardInitiative()
         return
     end
 
-    updateInitPlayerForward()
+    updateInitPlayerForward(player)
 
     rebuildUI()
     setInitiativeNotes()
 end
 
-function updateInitPlayerForward()
+function updateInitPlayerForward(player)
     local foundInitFigure = false
     local changedInitFigure = false
     --find the next player
@@ -1777,9 +1894,22 @@ function updateInitPlayerForward()
         end
         options.initCurrentRound = options.initCurrentRound + 1
     end
+    if changedInitFigure == true and pingInitMinis and player ~= nil then
+        figureObj = getObjectFromGUID(options.initCurrentGUID)
+        if player.team == nil then
+            -- We're a color, not a player, assign the player object
+            for _, loopPlayer in ipairs(Player.getPlayers()) do
+                if loopPlayer.color == player then
+                   player = loopPlayer
+                   break
+                end
+            end
+        end
+        player.pingTable(figureObj.getBounds().center);
+    end
 end
 
-function backwardInitiative()
+function backwardInitiative(player)
     if not options.initActive then
         print("Initiative must be active before navigating.")
         return
@@ -1790,13 +1920,13 @@ function backwardInitiative()
         return
     end
 
-    updateInitPlayerBackward()
+    updateInitPlayerBackward(player)
 
     rebuildUI()
     setInitiativeNotes()
 end
 
-function updateInitPlayerBackward()
+function updateInitPlayerBackward(player)
     local previousFigure = nil
     local foundInitFigure = false
     local changedInitFigure = false
@@ -1834,6 +1964,19 @@ function updateInitPlayerBackward()
         options.initCurrentGUID = previousFigure.guidValue
         changedInitFigure = true
         options.initCurrentRound = options.initCurrentRound - 1
+    end
+    if changedInitFigure == true and pingInitMinis and player ~= nil then
+        figureObj = getObjectFromGUID(options.initCurrentGUID)
+        if player.team == nil then
+            -- We're a color, not a player, assign the player object
+            for _, loopPlayer in ipairs(Player.getPlayers()) do
+                if loopPlayer.color == player then
+                   player = loopPlayer
+                   break
+                end
+            end
+        end
+        player.pingTable(figureObj.getBounds().center);
     end
 end
 
