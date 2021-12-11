@@ -10,7 +10,7 @@
         fontSize="180"
         textColor="#FFFFFF"
         color="#00000000"
-        visibility='Black'/>
+        tooltip="Show/Hide All Bars"/>
 
     <Button id="measureMove"
         position="-518 140 -60"
@@ -133,7 +133,8 @@
         textColor="#FFFFFF"
         color="#00000000"
         onClick="resetInitiative"
-        visibility='Black'/>
+        visibility='Black'
+        tooltip="Reset"/>
     <Button id="initiativeRefresh"
         value="true"
         position="435 725 -60"
@@ -145,7 +146,8 @@
         textColor="#FFFFFF"
         color="#00000000"
         onClick="refreshInitiative"
-        visibility='Black'/>
+        visibility='Black'
+        tooltip="Refresh"/>
     <Button id="initiativeRoll"
         value="true"
         position="690 725 -60"
@@ -157,7 +159,8 @@
         textColor="#FFFFFF"
         color="#00000000"
         onClick="rollInitiative"
-        visibility='Black'/>
+        visibility='Black'
+        tooltip="Roll"/>
     <Button id="initiativeBackward"
         value="true"
         position="270 625 -60"
@@ -169,7 +172,8 @@
         textColor="#FFFFFF"
         color="#00000000"
         onClick="backwardInitiative"
-        visibility='Black'/>
+        visibility='Black'
+        tooltip="Backward"/>
     <Button id="initiativeForward"
         value="true"
         position="600 625 -60"
@@ -181,7 +185,8 @@
         textColor="#FFFFFF"
         color="#00000000"
         onClick="forwardInitiative"
-        visibility='Black'/>
+        visibility='Black'
+        tooltip="Forward"/>
 
     <Button id="HideBars"
         position="-323 -667 -60"

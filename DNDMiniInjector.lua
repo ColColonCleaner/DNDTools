@@ -2,7 +2,7 @@
 -- Credit to HP Bar Writer by Kijan
 --[[LUAStart
 className = "MeasurementToken";
-versionNumber = "4.5.0";
+versionNumber = "4.5.1";
 scaleMultiplierX = 1.0;
 scaleMultiplierY = 1.0;
 scaleMultiplierZ = 1.0;
@@ -1156,7 +1156,7 @@ LUAStop--lua]]
 XMLStop--xml]]
 
 className = "MiniInjector";
-versionNumber = "4.5.0";
+versionNumber = "4.5.1";
 finishedLoading = false;
 debuggingEnabled = false;
 pingInitMinis = true;
@@ -1260,21 +1260,16 @@ function onLoad(save_state)
     self.UI.setAttribute("mana", "text", options.mana)
     self.UI.setAttribute("extra", "text", options.extra)
 
-    -- if not options.showAll then
-    --     self.UI.setAttribute("showAll", "value", "false")
-    --     Wait.frames(allOff, 25)
-    -- end
-
     self.setVar("className", "MiniInjector");
     rebuildContextMenu();
     finishedLoading = true
     self.setVar("finishedLoading", true);
     self.setName("DND Mini Injector " .. versionNumber);
 
-    addHotkey("Initiative Forward", forwardInitiative, boolean)
-    addHotkey("Initiative Backward", backwardInitiative, boolean)
-    addHotkey("Initiative Refresh", refreshInitiative, boolean)
-    addHotkey("Initiative Roll", rollInitiative, boolean)
+    addHotkey("Initiative Forward", forwardInitiative, false)
+    addHotkey("Initiative Backward", backwardInitiative, false)
+    addHotkey("Initiative Refresh", refreshInitiative, false)
+    addHotkey("Initiative Roll", rollInitiative, false)
 
     Wait.frames(updateSettingUI, 10)
 
@@ -1755,6 +1750,9 @@ function resetInitiative()
 end
 
 function refreshInitiative(player)
+    if player ~= nil and player.team == nil and player ~= "Black" then
+        return
+    end
     getInitiativeFigures()
     if options.initActive == true then
         updateInitPlayer(player)
@@ -1763,6 +1761,9 @@ function refreshInitiative(player)
 end
 
 function rollInitiative(player)
+    if player ~= nil and player.team == nil and player ~= "Black" then
+        return
+    end
     options.initActive = true
     getInitiativeFigures()
     if not checkPlayersSet() then
@@ -1843,6 +1844,9 @@ function updateInitPlayer(player)
 end
 
 function forwardInitiative(player)
+    if player ~= nil and player.team == nil and player ~= "Black" then
+        return
+    end
     if not options.initActive then
         print("Initiative must be active before navigating.")
         return
@@ -1910,6 +1914,9 @@ function updateInitPlayerForward(player)
 end
 
 function backwardInitiative(player)
+    if player ~= nil and player.team == nil and player ~= "Black" then
+        return
+    end
     if not options.initActive then
         print("Initiative must be active before navigating.")
         return
