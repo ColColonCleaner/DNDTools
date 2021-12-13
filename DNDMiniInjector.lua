@@ -2,7 +2,7 @@
 -- Credit to HP Bar Writer by Kijan
 --[[LUAStart
 className = "MeasurementToken";
-versionNumber = "4.5.1";
+versionNumber = "4.5.2";
 scaleMultiplierX = 1.0;
 scaleMultiplierY = 1.0;
 scaleMultiplierZ = 1.0;
@@ -456,7 +456,7 @@ function rebuildContextMenu()
     else
         self.addContextMenuItem("[ ] Debugging", toggleDebug)
     end
-    self.addContextMenuItem("UI Height+++", uiHeightUp);
+    self.addContextMenuItem("UI Height+++", uiHeightUp, true);
     self.addContextMenuItem("Reload Mini", reloadMini);
 end
 
@@ -1156,7 +1156,7 @@ LUAStop--lua]]
 XMLStop--xml]]
 
 className = "MiniInjector";
-versionNumber = "4.5.1";
+versionNumber = "4.5.2";
 finishedLoading = false;
 debuggingEnabled = false;
 pingInitMinis = true;
