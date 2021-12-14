@@ -2,7 +2,7 @@
 -- Credit to HP Bar Writer by Kijan
 --[[LUAStart
 className = "MeasurementToken";
-versionNumber = "4.5.2";
+versionNumber = "4.5.11";
 scaleMultiplierX = 1.0;
 scaleMultiplierY = 1.0;
 scaleMultiplierZ = 1.0;
@@ -13,6 +13,9 @@ onUpdateTriggerCount = 0;
 onUpdateScale = 1.0;
 loadTime = 1.0;
 saveVersion = 1;
+a = {};
+triggerNames = {};
+showing = false;
 
 health = {value = 10, max = 10}
 mana = {value = 10, max = 10}
@@ -290,10 +293,6 @@ function loadStageTwo()
     self.UI.setAttribute("InitiativeIncludeToggle", "textColor", options.initSettingsIncluded == true and "#AA2222" or "#FFFFFF")
     self.UI.setAttribute("InitiativeRollingToggle", "textColor", options.initSettingsRolling == true and "#AA2222" or "#FFFFFF")
 
-    if options.showBaseButtons == true then
-        createBtns()
-    end
-
     -- Look for the mini injector, if available
     local allObjects = getAllObjects()
     for _, obj in ipairs(allObjects) do
@@ -365,10 +364,25 @@ function loadStageTwo()
     onUpdateScale = 0.0
     loadTime = os.clock()
 
-    onSave()
+    instantiateTriggers()
 
     finishedLoading = true
     self.setVar("finishedLoading", true)
+end
+
+function instantiateTriggers()
+    for i = 0, 99 do
+        triggerNames[i] = nil
+        if self.AssetBundle ~= nil and self.AssetBundle.getTriggerEffects() ~= nil and self.AssetBundle.getTriggerEffects()[i] ~= nil then
+            a[i] = false
+            triggerNames[i] = self.AssetBundle.getTriggerEffects()[i].name
+            -- create a new global function
+            _G["TriggerFunction" .. i] = function()
+                -- that simply calls our real target function
+                self.AssetBundle.playTriggerEffect(i - 1)
+            end
+        end
+    end
 end
 
 function onPlayerConnect(player)
@@ -456,13 +470,19 @@ function rebuildContextMenu()
     else
         self.addContextMenuItem("[ ] Debugging", toggleDebug)
     end
-    self.addContextMenuItem("UI Height+++", uiHeightUp, true);
+    self.addContextMenuItem("UI Height UP", uiHeightUp, true);
+    self.addContextMenuItem("UI Rotate 90", uiRotate90, true);
     self.addContextMenuItem("Reload Mini", reloadMini);
 end
 
 function uiHeightUp()
     options.heightModifier = options.heightModifier + 50
     self.UI.setAttribute("panel", "position", "0 0 -" .. options.heightModifier)
+end
+
+function uiRotate90()
+    options.rotation = options.rotation + 90
+    self.UI.setAttribute("panel", "rotation", options.rotation .. " 270 90")
 end
 
 function toggleDebug()
@@ -485,26 +505,31 @@ function toggleMeasure()
     self.UI.setAttribute("MeasureMoveToggle", "textColor", measureMove == true and "#AA2222" or "#FFFFFF")
 end
 
-function toggleAlternateDiag()
-    Wait.frames(tad_Helper, 30);
-end
-function tad_Helper()
-    -- Look for the mini injector, if available
-    local allObjects = getAllObjects()
-    for _, obj in ipairs(allObjects) do
-        if obj ~= self and obj ~= nil then
-            local typeCheck = obj.getVar("className")
-            if typeCheck == "MiniInjector" then
-                local injOptions = obj.getTable("options")
-                alternateDiag = injOptions.alternateDiag;
-                self.UI.setAttribute("AlternateDiagToggle", "textColor", alternateDiag == true and "#AA2222" or "#FFFFFF")
-                return
+function toggleAlternateDiag(thePlayer1)
+    local myPlayer = thePlayer1
+    local function tad_Helper(thePlayer2)
+        -- Look for the mini injector, if available
+        local allObjects = getAllObjects()
+        for _, obj in ipairs(allObjects) do
+            if obj ~= self and obj ~= nil then
+                local typeCheck = obj.getVar("className")
+                if typeCheck == "MiniInjector" then
+                    local injOptions = obj.getTable("options")
+                    alternateDiag = injOptions.alternateDiag;
+                    self.UI.setAttribute("AlternateDiagToggle", "textColor", alternateDiag == true and "#AA2222" or "#FFFFFF")
+                    if thePlayer2 ~= nil then
+                        broadcastToAll("Injector is present. Use the injector to toggle measurement style.", thePlayer2.color)
+                    end
+                    return
+                end
             end
         end
+        alternateDiag = not alternateDiag;
+        self.UI.setAttribute("AlternateDiagToggle", "textColor", alternateDiag == true and "#AA2222" or "#FFFFFF")
     end
-    alternateDiag = not alternateDiag;
-    self.UI.setAttribute("AlternateDiagToggle", "textColor", alternateDiag == true and "#AA2222" or "#FFFFFF")
+    Wait.frames(function() tad_Helper(myPlayer) end, 30);
 end
+
 
 function toggleStabilizeOnDrop()
     stabilizeOnDrop = not stabilizeOnDrop;
@@ -701,15 +726,6 @@ function createMoveToken(mcolor, mtoken)
 
 end
 
-function createBtns()
-    local buttonParameter = {click_function = "add", function_owner = self, position = {0.3, 0.04, 0.4}, label = "+", width = 250, height = 250, font_size = 300, color = {0,0,0,0}, font_color = {0,0,0,100}}
-    self.createButton(buttonParameter)
-    buttonParameter.position = {-0.3, 0.04, 0.4}
-    buttonParameter.click_function = "sub"
-    buttonParameter.label = "-"
-    self.createButton(buttonParameter)
-end
-
 function reduceHP()
     adjustHP(-1)
 end
@@ -795,7 +811,7 @@ function onEndEdit(player, value, id)
         options.initMockValue = 0
         self.UI.setAttribute("InitValueInput", "text", options.initSettingsValue)
         if self.getVar("player") == true then
-            print(self.getName() .. " set initiative " .. options.initSettingsValue .. ".")
+            broadcastToAll(self.getName() .. " set initiative " .. options.initSettingsValue .. ".", player.color)
         end
     end
 end
@@ -808,7 +824,14 @@ function add() onClick(-1, - 1, "add") end
 function sub() onClick(-1, - 1, "sub") end
 
 function onClick(player_in, value, id)
-    if id == "editButton" then
+    if id == "leftSide" then
+        if showing ~= true then
+            showAllButtons()
+        else
+            self.clearButtons()
+            showing = false
+        end
+    elseif id == "editButton" then
         if firstEdit == true or self.UI.getAttribute("editPanel", "active") == "False" or self.UI.getAttribute("editPanel", "active") == nil then
             self.UI.setAttribute("editPanel", "active", true)
             self.UI.setAttribute("statePanel", "active", false)
@@ -831,14 +854,6 @@ function onClick(player_in, value, id)
             options.rotation = options.rotation - options.incrementBy
         end
         self.UI.setAttribute("panel", "rotation", options.rotation .. " 270 90")
-    elseif id == "BB" then
-        if options.showBaseButtons then
-            self.clearButtons()
-            options.showBaseButtons = false
-        else
-            createBtns()
-            options.showBaseButtons = true
-        end
     elseif id == "HH" then
         options.hideHp = not options.hideHp
         local vertical = self.UI.getAttribute("bars", "height")
@@ -976,6 +991,96 @@ function onClick(player_in, value, id)
     end
     self.UI.setAttribute("hpText", "textColor", "#FFFFFF")
     self.UI.setAttribute("manaText", "textColor", "#FFFFFF")
+end
+
+function showAllButtons()
+    local foundTriggers = false
+    posi = -16
+    posiY = -2
+    counter = 0
+    for k = 0, 99 do
+        if triggerNames[k] ~= nil and triggerNames[k] ~= "Reset" then
+            foundTriggers = true
+            -- typical button params
+            local button_parameters1 = {}
+            button_parameters1.click_function = "trigger"
+
+            button_parameters1.function_owner = self
+            button_parameters1.label = triggerNames[k]
+            button_parameters1.position = {posi, 4, posiY}
+            button_parameters1.rotation = {0, -90, 0}
+            button_parameters1.width = 2000
+            button_parameters1.height = 400
+            button_parameters1.font_size = 150
+
+            if a[k] == true then
+                button_parameters1.color = {74 / 255, 186 / 255, 74 / 255}
+                button_parameters1.hover_color = {74 / 255, 186 / 255, 74 / 255}
+            end
+
+            counter = counter + 1
+            if counter < 16 then
+                posi = posi + 1
+
+                if counter == 11 then
+                    if posiY == -21.5 then
+                        posiY = posiY - 6
+                        posi = -16
+                        counter = 0
+                    end
+                end
+            else
+                posi = -16
+                if posiY == -2 then
+                    posiY = posiY - 6
+                else
+                    posiY = posiY - 4.5
+                end
+                counter = 0
+            end
+
+            -- create a new global function
+            _G["ClickFunction" .. k] = function(obj, col)
+                -- that simply calls our real target function
+                RealClickFunction(obj, k)
+            end
+
+            button_parameters1.click_function = "ClickFunction" .. k
+
+            self.createButton(button_parameters1)
+        end
+    end
+    if triggerNames == false then
+        print("No triggers found.")
+        return
+    end
+    showing = true
+end
+
+function RealClickFunction(obj, index)
+    if a[index] ~= true then
+        a[index] = true
+        self.editButton({index = index - 2, color = {74 / 255, 186 / 255, 74 / 255}})
+        self.editButton({index = index - 2, hover_color = {120 / 255, 255 / 255, 120 / 255}})
+    else
+        a[index] = false
+        self.editButton({index = index - 2, color = {255 / 255, 255 / 255, 255 / 255}})
+        self.editButton({index = index - 2, hover_color = {180 / 255, 180 / 255, 180 / 255}})
+    end
+    self.AssetBundle.playTriggerEffect(0)
+    Wait.frames(updateTriggerAgain, 10)
+end
+
+function updateTriggerAgain()
+    timer = 1
+    for i = 0, 99 do
+        if a[i] ~= nil then
+            if a[i] == true then
+                Wait.frames(_G["TriggerFunction" .. i], timer)
+                timer = timer + 10
+            end
+        end
+    end
 end
 
 function onCollisionEnter(a) -- if colliding with a status token, destroy it and apply to UI
@@ -1156,7 +1261,7 @@ LUAStop--lua]]
 XMLStop--xml]]
 
 className = "MiniInjector";
-versionNumber = "4.5.2";
+versionNumber = "4.5.11";
 finishedLoading = false;
 debuggingEnabled = false;
 pingInitMinis = true;

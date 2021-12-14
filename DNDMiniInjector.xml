@@ -9,8 +9,7 @@
         onClick="toggleOnOff"
         fontSize="180"
         textColor="#FFFFFF"
-        color="#00000000"
-        tooltip="Show/Hide All Bars"/>
+        color="#00000000"/>
 
     <Button id="measureMove"
         position="-518 140 -60"
@@ -22,7 +21,7 @@
         fontSize="180"
         textColor="#FFFFFF"
         color="#00000000"
-        visibility='Black'/>
+        visibility="Black"/>
     <Button id="alternateDiag"
         position="-518 61 -60"
         scale="0.2 0.2 0.2"
@@ -33,7 +32,7 @@
         fontSize="180"
         textColor="#FFFFFF"
         color="#00000000"
-        visibility='Black'/>
+        visibility="Black"/>
     <Button id="playerChar"
         position="-518 -18 -60"
         scale="0.2 0.2 0.2"
@@ -44,7 +43,7 @@
         fontSize="180"
         textColor="#FFFFFF"
         color="#00000000"
-        visibility='Black'/>
+        visibility="Black"/>
 
     <InputField id="hp"
         position="-265 -85 -60"
@@ -59,7 +58,7 @@
         characterValidation="Decimal"
         textAlignment="MiddleCenter"
         onEndEdit="onEndEdit"
-        visibility='Black'/>
+        visibility="Black"/>
     <InputField id="mana"
         position="-265 -165 -60"
         text="10"
@@ -73,7 +72,7 @@
         characterValidation="Decimal"
         textAlignment="MiddleCenter"
         onEndEdit="onEndEdit"
-        visibility='Black'/>
+        visibility="Black"/>
     <InputField id="extra"
         position="-265 -239 -60"
         text="10"
@@ -87,7 +86,7 @@
         characterValidation="Decimal"
         textAlignment="MiddleCenter"
         onEndEdit="onEndEdit"
-        visibility='Black'/>
+        visibility="Black"/>
     <Button id="hideBar"
         position="-518 -328 -60"
         scale="0.2 0.2 0.2"
@@ -98,7 +97,7 @@
         fontSize="180"
         textColor="#FFFFFF"
         color="#00000000"
-        visibility='Black'/>
+        visibility="Black"/>
     <Button id="hideText"
         position="-518 -407 -60"
         scale="0.2 0.2 0.2"
@@ -109,7 +108,7 @@
         fontSize="180"
         textColor="#FFFFFF"
         color="#00000000"
-        visibility='Black'/>
+        visibility="Black"/>
     <Button id="editText"
         position="-518 -482 -60"
         scale="0.2 0.2 0.2"
@@ -120,7 +119,7 @@
         fontSize="180"
         textColor="#FFFFFF"
         color="#00000000"
-        visibility='Black'/>
+        visibility="Black"/>
 
     <Button id="initiativeReset"
         value="true"
@@ -133,8 +132,7 @@
         textColor="#FFFFFF"
         color="#00000000"
         onClick="resetInitiative"
-        visibility='Black'
-        tooltip="Reset"/>
+        visibility="Black"/>
     <Button id="initiativeRefresh"
         value="true"
         position="435 725 -60"
@@ -146,8 +144,7 @@
         textColor="#FFFFFF"
         color="#00000000"
         onClick="refreshInitiative"
-        visibility='Black'
-        tooltip="Refresh"/>
+        visibility="Black"/>
     <Button id="initiativeRoll"
         value="true"
         position="690 725 -60"
@@ -159,8 +156,7 @@
         textColor="#FFFFFF"
         color="#00000000"
         onClick="rollInitiative"
-        visibility='Black'
-        tooltip="Roll"/>
+        visibility="Black"/>
     <Button id="initiativeBackward"
         value="true"
         position="270 625 -60"
@@ -172,8 +168,7 @@
         textColor="#FFFFFF"
         color="#00000000"
         onClick="backwardInitiative"
-        visibility='Black'
-        tooltip="Backward"/>
+        visibility="Black"/>
     <Button id="initiativeForward"
         value="true"
         position="600 625 -60"
@@ -185,8 +180,7 @@
         textColor="#FFFFFF"
         color="#00000000"
         onClick="forwardInitiative"
-        visibility='Black'
-        tooltip="Forward"/>
+        visibility="Black"/>
 
     <Button id="HideBars"
         position="-323 -667 -60"
@@ -198,7 +192,7 @@
         fontSize="180"
         textColor="#FFFFFF"
         color="#00000000"
-        visibility='Black'/>
+        visibility="Black"/>
 
     <Button
         position="432 -129 -60"
@@ -209,7 +203,7 @@
         fontSize="90"
         textColor="#FFFFFF"
         color="#00000000"
-        visibility='White'/>
+        visibility="White"/>
     <Button
         position="432 -129 -60"
         scale="1 1 1"
@@ -219,7 +213,7 @@
         fontSize="90"
         textColor="#FFFFFF"
         color="#00000000"
-        visibility='Brown'/>
+        visibility="Brown"/>
     <Button
         position="432 -129 -60"
         scale="1 1 1"
@@ -229,7 +223,7 @@
         fontSize="90"
         textColor="#FFFFFF"
         color="#00000000"
-        visibility='Red'/>
+        visibility="Red"/>
     <Button
         position="432 -129 -60"
         scale="1 1 1"
@@ -239,7 +233,7 @@
         fontSize="90"
         textColor="#FFFFFF"
         color="#00000000"
-        visibility='Orange'/>
+        visibility="Orange"/>
     <Button
         position="432 -129 -60"
         scale="1 1 1"
@@ -249,7 +243,7 @@
         fontSize="90"
         textColor="#FFFFFF"
         color="#00000000"
-        visibility='Yellow'/>
+        visibility="Yellow"/>
     <Button
         position="432 -129 -60"
         scale="1 1 1"
@@ -259,7 +253,7 @@
         fontSize="90"
         textColor="#FFFFFF"
         color="#00000000"
-        visibility='Green'/>
+        visibility="Green"/>
     <Button
         position="432 -129 -60"
         scale="1 1 1"
@@ -269,7 +263,7 @@
         fontSize="90"
         textColor="#FFFFFF"
         color="#00000000"
-        visibility='Teal'/>
+        visibility="Teal"/>
     <Button
         position="432 -129 -60"
         scale="1 1 1"
@@ -279,7 +273,7 @@
         fontSize="90"
         textColor="#FFFFFF"
         color="#00000000"
-        visibility='Blue'/>
+        visibility="Blue"/>
     <Button
         position="432 -129 -60"
         scale="1 1 1"
@@ -289,7 +283,7 @@
         fontSize="90"
         textColor="#FFFFFF"
         color="#00000000"
-        visibility='Purple'/>
+        visibility="Purple"/>
     <Button
         position="432 -129 -60"
         scale="1 1 1"
@@ -299,7 +293,7 @@
         fontSize="90"
         textColor="#FFFFFF"
         color="#00000000"
-        visibility='Pink'/>
+        visibility="Pink"/>
     <Button
         position="432 -129 -60"
         scale="1 1 1"
@@ -309,8 +303,8 @@
         fontSize="90"
         textColor="#FFFFFF"
         color="#00000000"
-        visibility='Grey'/>
+        visibility="Grey"/>
 </Panel>
-<Panel id="initiativePanel" width="790" height="1400" position="432 -129 -60" color='black' visibility='Black'>
+<Panel id="initiativePanel" width="790" height="1400" position="432 -129 -60" color="black" visibility="Black">
 
 </Panel>
