@@ -18,8 +18,9 @@
 
 The code for these tools is available [on Github.](https://github.com/ColColonCleaner/DNDTools)
 
-![DND Mini Injector 4.5.11](https://i.imgur.com/83uMYlZ.jpg "DND Mini Injector 4.5.11")
-## DND Mini Injector 4.5.11
+![DND Mini Injector](https://i.imgur.com/83uMYlZ.jpg "DND Mini Injector")
+## DND Mini Injector
+### Latest Version: 4.5.11
 + **Injection.** 
   + Place a mini on the top of this panel to inject it, flip the panel over and place an injected mini on it to remove injection.
   + Removing injection does not remove saved settings for that mini.
@@ -68,8 +69,9 @@ The code for these tools is available [on Github.](https://github.com/ColColonCl
 + They will disappear and spawn a floating button above the mini showing the status.
 + Clicking the floating status button removes the status.
 
-![DND Measurement Tool 2.30](https://i.imgur.com/ncy9Hfm.jpg "DND Measurement Tool 2.30")
-## DND Measurement Tool 2.30
+![DND Measurement Tool](https://i.imgur.com/ncy9Hfm.jpg "DND Measurement Tool")
+## DND Measurement Tool
+### Latest Version: 2.30
 
 + Measurement uses DND rules in 5 foot increments.
 + Diagonals on grids are the same distance as straight. Alternate diagonal movement coming soon.
@@ -79,8 +81,9 @@ The code for these tools is available [on Github.](https://github.com/ColColonCl
 + While the tool is active it will stay in place when dropped, even if off the table.
 + **Remember you can toggle displaying TTS grid lines in the options menu.**
 
-![Wall Spawner 1.7](https://i.imgur.com/9OEZSWC.jpg "Wall Spawner 1.7")
-## Wall Spawner 1.7
+![Wall Spawner](https://i.imgur.com/9OEZSWC.jpg "Wall Spawner")
+## Wall Spawner
+### Latest Version: 1.7
 
 + **[SHOWCASE VIDEO](https://www.youtube.com/watch?v=9xxFUDGJmbE)** 
 + **OFF:** Spawner is disabled.
@@ -91,8 +94,9 @@ The code for these tools is available [on Github.](https://github.com/ColColonCl
 + Walls take color/transparency of the spawner.
 + Change wall height and offset with the input fields.
 
-![Click Roller Strip 3.0.2](https://i.imgur.com/EPYE26S.jpg "Click Roller Strip 3.0.2")
-## Click Roller Strip 3.0.2
+![Click Roller Strip](https://i.imgur.com/EPYE26S.jpg "Click Roller Strip")
+## Click Roller Strip
+### Latest Version: 3.0.2
 
 + Click buttons to spawn dice. Can spawn 4 rows of dice. Dice automatically resize as more are added.
 + Right-click buttons to remove types of dice in spawned order.
