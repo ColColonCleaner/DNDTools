@@ -19,7 +19,7 @@
 The code for these tools is available [on Github.](https://github.com/ColColonCleaner/DNDTools)
 
 ![DND Mini Injector](https://i.imgur.com/83uMYlZ.jpg "DND Mini Injector")
-## DND Mini Injector
+# DND Mini Injector
 ### Latest Version: 4.5.11
 + **Injection.** 
   + Place a mini on the top of this panel to inject it, flip the panel over and place an injected mini on it to remove injection.
@@ -63,14 +63,14 @@ The code for these tools is available [on Github.](https://github.com/ColColonCl
   + [DND 5e Miniatures w/Auto-Sizing and Measurement](https://steamcommunity.com/sharedfiles/filedetails/?id=2359564131)
 
 ![Floating Status Effects](https://i.imgur.com/e3S1Rnp.jpg "Floating Status Effects")
-## Floating Status Effects
+# Floating Status Effects
 
 + These status effect tokens can be placed on top of injected minis.
 + They will disappear and spawn a floating button above the mini showing the status.
 + Clicking the floating status button removes the status.
 
 ![DND Measurement Tool](https://i.imgur.com/ncy9Hfm.jpg "DND Measurement Tool")
-## DND Measurement Tool
+# DND Measurement Tool
 ### Latest Version: 2.30
 
 + Measurement uses DND rules in 5 foot increments.
@@ -82,7 +82,7 @@ The code for these tools is available [on Github.](https://github.com/ColColonCl
 + **Remember you can toggle displaying TTS grid lines in the options menu.**
 
 ![Wall Spawner](https://i.imgur.com/9OEZSWC.jpg "Wall Spawner")
-## Wall Spawner
+# Wall Spawner
 ### Latest Version: 1.7
 
 + **[SHOWCASE VIDEO](https://www.youtube.com/watch?v=9xxFUDGJmbE)** 
@@ -95,7 +95,7 @@ The code for these tools is available [on Github.](https://github.com/ColColonCl
 + Change wall height and offset with the input fields.
 
 ![Click Roller Strip](https://i.imgur.com/EPYE26S.jpg "Click Roller Strip")
-## Click Roller Strip
+# Click Roller Strip
 ### Latest Version: 3.0.2
 
 + Click buttons to spawn dice. Can spawn 4 rows of dice. Dice automatically resize as more are added.
@@ -105,14 +105,14 @@ The code for these tools is available [on Github.](https://github.com/ColColonCl
 + Dice and rolls are always visible, even inside hidden zones.
 
 ![One World GridSaver Tokens](https://i.imgur.com/7sVcizo.jpg "One World GridSaver Tokens")
-## One World GridSaver Tokens
+# One World GridSaver Tokens
 
 + These GridSaver tokens allow you to save TTS grid size/offset with your OneWorld maps.
 + When you 'BUILD' the OneWorld map with a GridSaver in it, the grid state that was saved with the token will come back.
 + Injected miniatures will be automatically resized to match the new grid.
 
 ![5e Fallout Armor Calculator](https://i.imgur.com/QHRVoBZ.jpg "5e Fallout Armor Calculator")
-## 5e Fallout Armor Calculator
+# 5e Fallout Armor Calculator
 
 + [Wiki for 5e Fallout](http://5efallout.wikidot.com/)
 + Running a campain in the world of New Vegas at the moment.
