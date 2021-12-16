@@ -2,7 +2,7 @@
 -- Credit to HP Bar Writer by Kijan
 --[[LUAStart
 className = "MeasurementToken";
-versionNumber = "4.5.11";
+versionNumber = "4.5.21";
 scaleMultiplierX = 1.0;
 scaleMultiplierY = 1.0;
 scaleMultiplierZ = 1.0;
@@ -16,6 +16,7 @@ saveVersion = 1;
 a = {};
 triggerNames = {};
 showing = false;
+savedAttachScales = {}
 
 health = {value = 10, max = 10}
 mana = {value = 10, max = 10}
@@ -385,8 +386,86 @@ function instantiateTriggers()
     end
 end
 
+function onRotate(spin, flip, player_color, old_spin, old_flip)
+    if flip ~= old_flip and flip > 175 and flip < 185 and self.getVar("player") == false then
+        aColors = Player.getAvailableColors()
+        for k, v in ipairs(aColors) do
+            if v == "Black" or v == "Grey" then
+                table.remove(aColors, k)
+            end
+        end
+        table.insert(aColors, #aColors+1, "Grey")
+        if debuggingEnabled then
+            print(self.getName() .. " gone.")
+        end
+        self.setInvisibleTo(aColors)
+        -- If the object has attachments, make them invisible too
+        myAttach = self.removeAttachments()
+        if #myAttach > 0 then
+            savedAttachScales = {}
+            if debuggingEnabled then
+                print(self.getName() .. " has attach.")
+            end
+            for _, attachObj in ipairs(myAttach) do
+                if debuggingEnabled then
+                    print(attachObj.getName() .. " gone.")
+                end
+                --attachObj.setInvisibleTo(aColors)
+                table.insert(savedAttachScales, attachObj.getScale())
+                attachObj.setScale(vector(0, 0, 0))
+                self.addAttachment(attachObj)
+            end
+        end
+    elseif #savedAttachScales > 0 then
+        if debuggingEnabled then
+            print(self.getName() .. " back.")
+        end
+        self.setInvisibleTo({})
+        -- If the object has attachments, make them visible too
+        myAttach = self.removeAttachments()
+        if #myAttach > 0 then
+            if debuggingEnabled then
+                print(self.getName() .. " has attach.")
+            end
+            for attachIndex, attachObj in ipairs(myAttach) do
+                if debuggingEnabled then
+                    print(attachObj.getName() .. " back.")
+                end
+                attachObj.setScale(savedAttachScales[attachIndex])
+                self.addAttachment(attachObj)
+            end
+            savedAttachScales = {}
+        end
+    end
+end
+
+function onObjectPickUp(colorName, object)
+    if self == object and #savedAttachScales > 0 and self.type == "Figurine" then
+        if debuggingEnabled then
+            print(self.getName() .. " back.")
+        end
+        self.setInvisibleTo({})
+        -- If the object has attachments, make them visible too
+        myAttach = self.removeAttachments()
+        if #myAttach > 0 then
+            if debuggingEnabled then
+                print(self.getName() .. " has attach.")
+            end
+            for attachIndex, attachObj in ipairs(myAttach) do
+                if debuggingEnabled then
+                    print(attachObj.getName() .. " back.")
+                end
+                attachObj.setScale(savedAttachScales[attachIndex])
+                self.addAttachment(attachObj)
+            end
+            savedAttachScales = {}
+        end
+    end
+end
+
 function onPlayerConnect(player)
-    Wait.frames(updateHighlight, 5000)
+    -- Wait 30 seconds for them to load fully.
+    Wait.time(updateHighlight, 30)
 end
 
 function changeHighlight(player, value, id)
@@ -1261,10 +1340,11 @@ LUAStop--lua]]
 XMLStop--xml]]
 
 className = "MiniInjector";
-versionNumber = "4.5.11";
+versionNumber = "4.5.21";
 finishedLoading = false;
 debuggingEnabled = false;
 pingInitMinis = true;
+hideUpsideDownMinis = true;
 autoCalibrateEnabled = false;
 injectEverythingAllowed = false;
 injectEverythingActive = false;
