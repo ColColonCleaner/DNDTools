@@ -1,21 +1,21 @@
 -- DNDMiniInjector
 -- Credit to HP Bar Writer by Kijan
 --[[LUAStart
-className = "MeasurementToken";
-versionNumber = "4.5.21";
-scaleMultiplierX = 1.0;
-scaleMultiplierY = 1.0;
-scaleMultiplierZ = 1.0;
-finishedLoading = false;
-calibratedOnce = false;
-debuggingEnabled = false;
-onUpdateTriggerCount = 0;
-onUpdateScale = 1.0;
-loadTime = 1.0;
-saveVersion = 1;
-a = {};
-triggerNames = {};
-showing = false;
+className = "MeasurementToken"
+versionNumber = "4.5.36"
+scaleMultiplierX = 1.0
+scaleMultiplierY = 1.0
+scaleMultiplierZ = 1.0
+finishedLoading = false
+calibratedOnce = false
+debuggingEnabled = false
+onUpdateTriggerCount = 0
+onUpdateScale = 1.0
+loadTime = 1.0
+saveVersion = 1
+a = {}
+triggerNames = {}
+showing = false
 savedAttachScales = {}
 
 health = {value = 10, max = 10}
@@ -28,6 +28,7 @@ alternateDiag = false
 stabilizeOnDrop = false
 miniHighlight = "highlightNone"
 highlightToggle = true
+hideFromPlayers = false
 firstEdit = true
 
 options = {
@@ -107,6 +108,12 @@ function onSave()
     if debuggingEnabled then
         print(self.getName() .. " saving, version " .. saveVersion .. ".")
     end
+    local encodedAttachScales = {}
+    if #savedAttachScales > 0 then
+        for _, scaleVector in ipairs(savedAttachScales) do
+            table.insert(encodedAttachScales, {x=scaleVector.x, y=scaleVector.y, z=scaleVector.z})
+        end
+    end
     local save_state = JSON.encode({
         scale_multiplier_x = scaleMultiplierX,
         scale_multiplier_y = scaleMultiplierY,
@@ -116,6 +123,7 @@ function onSave()
         mana = mana,
         extra = extra,
         options = options,
+        encodedAttachScales = encodedAttachScales,
         statNames = statNames,
         player = player,
         measureMove = measureMove,
@@ -123,6 +131,7 @@ function onSave()
         stabilizeOnDrop = stabilizeOnDrop,
         miniHighlight = miniHighlight,
         highlightToggle = highlightToggle,
+        hideFromPlayers = hideFromPlayers,
         saveVersion = saveVersion
     })
     return save_state
@@ -171,43 +180,54 @@ function onLoad(save_state)
                 end
             end
         end
+        if saved_data.encodedAttachScales then
+            for _,encodedScale in pairs(saved_data.encodedAttachScales) do
+                if debuggingEnabled then
+                    print("loaded vector: " .. encodedScale.x .. ", " .. encodedScale.y .. ", " .. encodedScale.z)
+                end
+                table.insert(savedAttachScales, vector(encodedScale.x, encodedScale.y, encodedScale.z))
+            end
+        end
         if saved_data.statNames then
             for stat,_ in pairs(statNames) do
                 statNames[stat] = saved_data.statNames[stat]
             end
         end
         if saved_data.scale_multiplier_x ~= nil then
-            scaleMultiplierX = saved_data.scale_multiplier_x;
+            scaleMultiplierX = saved_data.scale_multiplier_x
         end
         if saved_data.scale_multiplier_y ~= nil then
-            scaleMultiplierY = saved_data.scale_multiplier_y;
+            scaleMultiplierY = saved_data.scale_multiplier_y
         end
         if saved_data.scale_multiplier_z ~= nil then
-            scaleMultiplierZ = saved_data.scale_multiplier_z;
+            scaleMultiplierZ = saved_data.scale_multiplier_z
         end
         if saved_data.calibrated_once ~= nil then
-            calibratedOnce = saved_data.calibrated_once;
+            calibratedOnce = saved_data.calibrated_once
         end
         if saved_data.player ~= nil then
-            player = saved_data.player;
+            player = saved_data.player
         end
         if saved_data.measureMove ~= nil then
-            measureMove = saved_data.measureMove;
+            measureMove = saved_data.measureMove
         end
         if saved_data.alternateDiag ~= nil then
-            alternateDiag = saved_data.alternateDiag;
+            alternateDiag = saved_data.alternateDiag
         end
         if saved_data.stabilizeOnDrop ~= nil then
-            stabilizeOnDrop = saved_data.stabilizeOnDrop;
+            stabilizeOnDrop = saved_data.stabilizeOnDrop
         end
         if saved_data.miniHighlight ~= nil then
-            miniHighlight = saved_data.miniHighlight;
+            miniHighlight = saved_data.miniHighlight
         end
         if saved_data.highlightToggle ~= nil then
-            highlightToggle = saved_data.highlightToggle;
+            highlightToggle = saved_data.highlightToggle
+        end
+        if saved_data.hideFromPlayers ~= nil then
+            hideFromPlayers = saved_data.hideFromPlayers
         end
         if saved_data.saveVersion ~= nil then
-            saveVersion = saved_data.saveVersion;
+            saveVersion = saved_data.saveVersion
             if debuggingEnabled then
                 print(self.getName() .. " loading, version " .. saveVersion .. ".")
             end
@@ -220,8 +240,9 @@ function onLoad(save_state)
     self.setVar("stabilizeOnDrop", stabilizeOnDrop)
     self.setVar("miniHighlight", miniHighlight)
     self.setVar("highlightToggle", highlightToggle)
+    self.setVar("hideFromPlayers", hideFromPlayers)
     if stabilizeOnDrop == true then
-        Wait.frames(stabilize, 1);
+        Wait.frames(stabilize, 1)
     end
     Wait.frames(loadStageOne, 10)
 end
@@ -306,7 +327,7 @@ function loadStageTwo()
                 end
                 -- grab ui settings
                 local injOptions = obj.getTable("options")
-                alternateDiag = injOptions.alternateDiag;
+                alternateDiag = injOptions.alternateDiag
                 self.UI.setAttribute("AlternateDiagToggle", "textColor", alternateDiag == true and "#AA2222" or "#FFFFFF")
                 if player == true then
                     self.UI.setAttribute("progressBar", "visibility", "")
@@ -367,6 +388,22 @@ function loadStageTwo()
 
     instantiateTriggers()
 
+    if hideFromPlayers then
+        aColors = Player.getAvailableColors()
+        for k, v in ipairs(aColors) do
+            if v == "Black" or v == "Grey" or v == "White" then
+                table.remove(aColors, k)
+            end
+        end
+        table.insert(aColors, "Grey")
+        table.insert(aColors, "White")
+        if debuggingEnabled then
+            print(self.getName() .. " gone.")
+        end
+        self.setInvisibleTo(aColors)
+        -- In this case attachments are already shrunk, don't worry about them
+    end
+
     finishedLoading = true
     self.setVar("finishedLoading", true)
 end
@@ -382,83 +419,6 @@ function instantiateTriggers()
                 -- that simply calls our real target function
                 self.AssetBundle.playTriggerEffect(i - 1)
             end
-        end
-    end
-end
-
-function onRotate(spin, flip, player_color, old_spin, old_flip)
-    if flip ~= old_flip and flip > 175 and flip < 185 and self.getVar("player") == false then
-        aColors = Player.getAvailableColors()
-        for k, v in ipairs(aColors) do
-            if v == "Black" or v == "Grey" then
-                table.remove(aColors, k)
-            end
-        end
-        table.insert(aColors, #aColors+1, "Grey")
-        if debuggingEnabled then
-            print(self.getName() .. " gone.")
-        end
-        self.setInvisibleTo(aColors)
-        -- If the object has attachments, make them invisible too
-        myAttach = self.removeAttachments()
-        if #myAttach > 0 then
-            savedAttachScales = {}
-            if debuggingEnabled then
-                print(self.getName() .. " has attach.")
-            end
-            for _, attachObj in ipairs(myAttach) do
-                if debuggingEnabled then
-                    print(attachObj.getName() .. " gone.")
-                end
-                --attachObj.setInvisibleTo(aColors)
-                table.insert(savedAttachScales, attachObj.getScale())
-                attachObj.setScale(vector(0, 0, 0))
-                self.addAttachment(attachObj)
-            end
-        end
-    elseif #savedAttachScales > 0 then
-        if debuggingEnabled then
-            print(self.getName() .. " back.")
-        end
-        self.setInvisibleTo({})
-        -- If the object has attachments, make them visible too
-        myAttach = self.removeAttachments()
-        if #myAttach > 0 then
-            if debuggingEnabled then
-                print(self.getName() .. " has attach.")
-            end
-            for attachIndex, attachObj in ipairs(myAttach) do
-                if debuggingEnabled then
-                    print(attachObj.getName() .. " back.")
-                end
-                attachObj.setScale(savedAttachScales[attachIndex])
-                self.addAttachment(attachObj)
-            end
-            savedAttachScales = {}
-        end
-    end
-end
-
-function onObjectPickUp(colorName, object)
-    if self == object and #savedAttachScales > 0 and self.type == "Figurine" then
-        if debuggingEnabled then
-            print(self.getName() .. " back.")
-        end
-        self.setInvisibleTo({})
-        -- If the object has attachments, make them visible too
-        myAttach = self.removeAttachments()
-        if #myAttach > 0 then
-            if debuggingEnabled then
-                print(self.getName() .. " has attach.")
-            end
-            for attachIndex, attachObj in ipairs(myAttach) do
-                if debuggingEnabled then
-                    print(attachObj.getName() .. " back.")
-                end
-                attachObj.setScale(savedAttachScales[attachIndex])
-                self.addAttachment(attachObj)
-            end
-            savedAttachScales = {}
         end
     end
 end
@@ -518,7 +478,7 @@ function onUpdate()
             self.UI.setAttribute("panel", "scale", newScale .. " " .. newScale)
             self.UI.setAttribute("panel", "position", "0 0 -" .. (options.heightModifier + 1))
             self.UI.setAttribute("panel", "position", "0 0 -" .. options.heightModifier)
-            local vertical = 0;
+            local vertical = 0
             vertical = vertical + (options.hideHp == true and 0 or 100)
             vertical = vertical + (options.hideMana == true and 0 or 100)
             vertical = vertical + (options.hideExtra == true and 0 or 100)
@@ -533,25 +493,30 @@ function onUpdate()
 end
 
 function dec3(input)
-    return math.floor(input * 1000.0) / 1000.0;
+    return math.floor(input * 1000.0) / 1000.0
 end
 
 function rebuildContextMenu()
-    self.clearContextMenu();
+    self.clearContextMenu()
+    self.addContextMenuItem("UI Height UP", uiHeightUp, true)
+    self.addContextMenuItem("UI Rotate 90", uiRotate90, true)
+    if hideFromPlayers == true then
+        self.addContextMenuItem("[X] Hide from players", toggleHideFromPlayers)
+    else
+        self.addContextMenuItem("[ ] Hide from players", toggleHideFromPlayers)
+    end
     if calibratedOnce == true then
         self.addContextMenuItem("[X] Calibrate Scale", calibrateScale)
     else
         self.addContextMenuItem("[ ] Calibrate Scale", calibrateScale)
     end
-    self.addContextMenuItem("Reset Scale", resetScale);
+    self.addContextMenuItem("Reset Scale", resetScale)
+    self.addContextMenuItem("Reload Mini", reloadMini)
     if debuggingEnabled == true then
         self.addContextMenuItem("[X] Debugging", toggleDebug)
     else
         self.addContextMenuItem("[ ] Debugging", toggleDebug)
     end
-    self.addContextMenuItem("UI Height UP", uiHeightUp, true);
-    self.addContextMenuItem("UI Rotate 90", uiRotate90, true);
-    self.addContextMenuItem("Reload Mini", reloadMini);
 end
 
 function uiHeightUp()
@@ -565,22 +530,78 @@ function uiRotate90()
 end
 
 function toggleDebug()
-    debuggingEnabled = not debuggingEnabled;
-    rebuildContextMenu();
+    debuggingEnabled = not debuggingEnabled
+    rebuildContextMenu()
+end
+
+function toggleHideFromPlayers()
+    hideFromPlayers = not hideFromPlayers
+    if hideFromPlayers then
+        aColors = Player.getAvailableColors()
+        for k, v in ipairs(aColors) do
+            if v == "Black" or v == "Grey" or v == "White" then
+                table.remove(aColors, k)
+            end
+        end
+        table.insert(aColors, "Grey")
+        table.insert(aColors, "White")
+        if debuggingEnabled then
+            print(self.getName() .. " gone.")
+        end
+        self.setInvisibleTo(aColors)
+        -- If the object has attachments, make them invisible too
+        myAttach = self.removeAttachments()
+        if #myAttach > 0 then
+            savedAttachScales = {}
+            if debuggingEnabled then
+                print(self.getName() .. " has attach.")
+            end
+            for _, attachObj in ipairs(myAttach) do
+                if debuggingEnabled then
+                    print(attachObj.getName() .. " gone.")
+                end
+                --attachObj.setInvisibleTo(aColors)
+                table.insert(savedAttachScales, attachObj.getScale())
+                attachObj.setScale(vector(0, 0, 0))
+                self.addAttachment(attachObj)
+            end
+        end
+    else
+        if debuggingEnabled then
+            print(self.getName() .. " back.")
+        end
+        self.setInvisibleTo({})
+        -- If the object has attachments, make them visible too
+        myAttach = self.removeAttachments()
+        if #myAttach > 0 then
+            if debuggingEnabled then
+                print(self.getName() .. " has attach.")
+            end
+            for attachIndex, attachObj in ipairs(myAttach) do
+                if debuggingEnabled then
+                    print(attachObj.getName() .. " back.")
+                end
+                attachObj.setScale(savedAttachScales[attachIndex])
+                self.addAttachment(attachObj)
+            end
+        end
+        savedAttachScales = {}
+    end
+    rebuildContextMenu()
 end
 
 function togglePlayer()
-    player = not player;
+    player = not player
     self.ignore_fog_of_war = player
     self.UI.setAttribute("PlayerCharToggle", "textColor", player == true and "#AA2222" or "#FFFFFF")
     if player == true then
         resetInitiative()
     end
-    Wait.frames(loadStageTwo, 1);
+    Wait.frames(loadStageTwo, 1)
 end
 
 function toggleMeasure()
-    measureMove = not measureMove;
+    measureMove = not measureMove
     self.UI.setAttribute("MeasureMoveToggle", "textColor", measureMove == true and "#AA2222" or "#FFFFFF")
 end
 
@@ -594,7 +615,7 @@ function toggleAlternateDiag(thePlayer1)
                 local typeCheck = obj.getVar("className")
                 if typeCheck == "MiniInjector" then
                     local injOptions = obj.getTable("options")
-                    alternateDiag = injOptions.alternateDiag;
+                    alternateDiag = injOptions.alternateDiag
                     self.UI.setAttribute("AlternateDiagToggle", "textColor", alternateDiag == true and "#AA2222" or "#FFFFFF")
                     if thePlayer2 ~= nil then
                         broadcastToAll("Injector is present. Use the injector to toggle measurement style.", thePlayer2.color)
@@ -603,20 +624,20 @@ function toggleAlternateDiag(thePlayer1)
                 end
             end
         end
-        alternateDiag = not alternateDiag;
+        alternateDiag = not alternateDiag
         self.UI.setAttribute("AlternateDiagToggle", "textColor", alternateDiag == true and "#AA2222" or "#FFFFFF")
     end
-    Wait.frames(function() tad_Helper(myPlayer) end, 30);
+    Wait.frames(function() tad_Helper(myPlayer) end, 30)
 end
 
 
 function toggleStabilizeOnDrop()
-    stabilizeOnDrop = not stabilizeOnDrop;
+    stabilizeOnDrop = not stabilizeOnDrop
     self.UI.setAttribute("StabilizeToggle", "textColor", stabilizeOnDrop == true and "#AA2222" or "#FFFFFF")
 end
 
 function toggleInitiativeInclude()
-    options.initSettingsIncluded = not options.initSettingsIncluded;
+    options.initSettingsIncluded = not options.initSettingsIncluded
     if options.initSettingsIncluded == false then
         options.initRealActive = false
         options.initRealValue = 0
@@ -627,13 +648,7 @@ function toggleInitiativeInclude()
 end
 
 function toggleInitiativeRolling()
-    -- if player == true then
-    --     options.initSettingsRolling = false
-    --     broadcastToAll("Player characters enter initiative manually.", {1,1,1})
-    --     return
-    -- else
-    -- end
-    options.initSettingsRolling = not options.initSettingsRolling;
+    options.initSettingsRolling = not options.initSettingsRolling
     if options.initSettingsRolling == true then
         options.initRealActive = false
         options.initRealValue = 0
@@ -644,94 +659,121 @@ function toggleInitiativeRolling()
 end
 
 function calibrateScale()
-    currentScale = self.getScale();
-    scaleMultiplierX = currentScale.x / Grid.sizeX;
-    scaleMultiplierY = currentScale.y / Grid.sizeX;
-    scaleMultiplierZ = currentScale.z / Grid.sizeX;
-    calibratedOnce = true;
+    currentScale = self.getScale()
+    scaleMultiplierX = currentScale.x / Grid.sizeX
+    scaleMultiplierY = currentScale.y / Grid.sizeX
+    scaleMultiplierZ = currentScale.z / Grid.sizeX
+    calibratedOnce = true
     if debuggingEnabled then
-        print(self.getName() .. ": Calibrated scale with reference to grid.");
+        print(self.getName() .. ": Calibrated scale with reference to grid.")
     end
-    rebuildContextMenu();
+    rebuildContextMenu()
 end
 
 function reloadMini()
-    self.reload();
+    self.reload()
 end
 
 function resetScale()
     if calibratedOnce == false then
         if debuggingEnabled == true then
-            print(self.getName() .. ": Mini not calibrated to grid yet.");
+            print(self.getName() .. ": Mini not calibrated to grid yet.")
         end
-        return;
+        return
     end
-    newScaleX = Grid.sizeX * scaleMultiplierX;
-    newScaleY = Grid.sizeX * scaleMultiplierY;
-    newScaleZ = Grid.sizeX * scaleMultiplierZ;
+    newScaleX = Grid.sizeX * scaleMultiplierX
+    newScaleY = Grid.sizeX * scaleMultiplierY
+    newScaleZ = Grid.sizeX * scaleMultiplierZ
     if debuggingEnabled == true then
-        print(self.getName() .. ": Reset scale with reference to grid.");
+        print(self.getName() .. ": Reset scale with reference to grid.")
     end
-    scaleVector = vector(newScaleX, newScaleY, newScaleZ);
-    self.setScale(scaleVector);
+    scaleVector = vector(newScaleX, newScaleY, newScaleZ)
+    self.setScale(scaleVector)
+end
+
+function onRotate(spin, flip, player_color, old_spin, old_flip)
+    if flip ~= old_flip then
+        destabilize()
+        local object = self
+        local rotateWatch = function()
+            if object == nil or object.resting then
+                return true
+            end
+            local currentRotation = object.getRotation()
+            local rotationTarget = object.getRotationSmooth()
+            return rotationTarget == nil or currentRotation:angle(rotationTarget) < 0.5
+        end
+        local rotateFunc = function()
+            if object == nil then
+                return
+            end
+            if stabilizeOnDrop == true then
+                if debuggingEnabled == true then
+                    print(self.getName() .. ": Stabilizing after rotation.")
+                end
+                stabilize()
+            end
+        end
+        Wait.condition(rotateFunc, rotateWatch)
+    end
 end
 
 function onPickUp(pcolor)
-    destabilize();
-    if measureMove == true then
-        createMoveToken(pcolor, self);
+    destabilize()
+    if measureMove == true and hideFromPlayers == false then
+        createMoveToken(pcolor, self)
     end
 end
 
 function onDrop(dcolor)
     if stabilizeOnDrop == true then
-        stabilize();
+        stabilize()
     end
     if measureMove == true then
-        destroyMoveToken();
+        destroyMoveToken()
     end
 end
 
 function stabilize()
-    local rb = self.getComponent("Rigidbody");
-    rb.set("freezeRotation", true);
+    local rb = self.getComponent("Rigidbody")
+    rb.set("freezeRotation", true)
 end
 
 function destabilize()
-    local rb = self.getComponent("Rigidbody");
-    rb.set("freezeRotation", false);
+    local rb = self.getComponent("Rigidbody")
+    rb.set("freezeRotation", false)
 end
 
 function destroyMoveToken()
     if string.match(tostring(myMoveToken),"Custom") then
-        destroyObject(myMoveToken);
+        destroyObject(myMoveToken)
     end
 end
 
 function createMoveToken(mcolor, mtoken)
-    destroyMoveToken();
-    tokenRot = Player[mcolor].getPointerRotation();
+    destroyMoveToken()
+    tokenRot = Player[mcolor].getPointerRotation()
     movetokenparams = {
         image = "http://cloud-3.steamusercontent.com/ugc/1021697601906583980/C63D67188FAD8B02F1B58E17C7B1DB304B7ECBE3/",
         thickness = 0.1,
         type = 2
     }
-    startloc = mtoken.getPosition();
+    startloc = mtoken.getPosition()
     local hitList = Physics.cast({
         origin       = mtoken.getBounds().center,
         direction    = {0,-1,0},
         type         = 1,
         max_distance = 10,
         debug        = false,
-    });
+    })
     for _, hitTable in ipairs(hitList) do
         -- Find the first object directly below the mini
         if hitTable ~= nil and hitTable.point ~= nil and hitTable.hit_object ~= mtoken then
-            startloc = hitTable.point;
-            break;
+            startloc = hitTable.point
+            break
         else
             if debuggingEnabled == true then
-                print("Did not find object below mini.");
+                print("Did not find object below mini.")
             end
         end
     end
@@ -747,16 +789,16 @@ function createMoveToken(mcolor, mtoken)
         scale = tokenScale,
         sound = false
     }
-    local moveToken = spawnObject(spawnparams);
-    moveToken.setLock(true);
-    moveToken.setCustomObject(movetokenparams);
-    mtoken.setVar("myMoveToken", moveToken);
-    moveToken.setVar("measuredObject", mtoken);
-    moveToken.setVar("myPlayer", mcolor);
-    moveToken.setVar("alternateDiag", alternateDiag);
-    moveToken.setVar("className", "MeasurementToken_Move");
-    moveToken.ignore_fog_of_war = player;
-    moveToken.interactable = false;
+    local moveToken = spawnObject(spawnparams)
+    moveToken.setLock(true)
+    moveToken.setCustomObject(movetokenparams)
+    mtoken.setVar("myMoveToken", moveToken)
+    moveToken.setVar("measuredObject", mtoken)
+    moveToken.setVar("myPlayer", mcolor)
+    moveToken.setVar("alternateDiag", alternateDiag)
+    moveToken.setVar("className", "MeasurementToken_Move")
+    moveToken.ignore_fog_of_war = player
+    moveToken.interactable = false
     moveButtonParams = {
         click_function = "onLoad",
         function_owner = self,
@@ -767,13 +809,13 @@ function createMoveToken(mcolor, mtoken)
         font_size = 600
     }
 
-    moveButton = moveToken.createButton(moveButtonParams);
+    moveButton = moveToken.createButton(moveButtonParams)
     moveToken.setLuaScript("    function onUpdate() " ..
                            "        local finalDistance = 0 " ..
                            "        local mypos = self.getPosition() " ..
                            "        if measuredObject == nil or measuredObject.held_by_color == nil then " ..
-                           "            destroyObject(self); " ..
-                           "            return; " ..
+                           "            destroyObject(self) " ..
+                           "            return " ..
                            "        end " ..
                            "        local opos = measuredObject.getPosition() " ..
                            "        local oheld = measuredObject.held_by_color " ..
@@ -781,23 +823,23 @@ function createMoveToken(mcolor, mtoken)
                            "        mdiff = mypos - opos " ..
                            "        if oheld then " ..
                            "            if alternateDiag then " ..
-                           "                mDistance = math.abs(mdiff.x); " ..
-                           "                xDisGrid = math.floor(mDistance / Grid.sizeX + 0.5); " ..
-                           "                zDistance = math.abs(mdiff.z); " ..
-                           "                yDisGrid = math.floor(zDistance / Grid.sizeY + 0.5); " ..
+                           "                mDistance = math.abs(mdiff.x) " ..
+                           "                xDisGrid = math.floor(mDistance / Grid.sizeX + 0.5) " ..
+                           "                zDistance = math.abs(mdiff.z) " ..
+                           "                yDisGrid = math.floor(zDistance / Grid.sizeY + 0.5) " ..
                            "                if xDisGrid > yDisGrid then " ..
-                           "                    finalDistance = math.floor(xDisGrid + yDisGrid/2.0) * 5.0; " ..
+                           "                    finalDistance = math.floor(xDisGrid + yDisGrid/2.0) * 5.0 " ..
                            "                else" ..
-                           "                    finalDistance = math.floor(yDisGrid + xDisGrid/2.0) * 5.0; " ..
+                           "                    finalDistance = math.floor(yDisGrid + xDisGrid/2.0) * 5.0 " ..
                            "                end " ..
                            "            else " ..
-                           "                mDistance = math.abs(mdiff.x); " ..
-                           "                zDistance = math.abs(mdiff.z); " ..
+                           "                mDistance = math.abs(mdiff.x) " ..
+                           "                zDistance = math.abs(mdiff.z) " ..
                            "                if zDistance > mDistance then " ..
-                           "                    mDistance = zDistance; " ..
+                           "                    mDistance = zDistance " ..
                            "                end " ..
-                           "                mDistance = mDistance * (5.0 / Grid.sizeX); " ..
-                           "                finalDistance = (math.floor((mDistance + 2.5) / 5.0) * 5); " ..
+                           "                mDistance = mDistance * (5.0 / Grid.sizeX) " ..
+                           "                finalDistance = (math.floor((mDistance + 2.5) / 5.0) * 5) " ..
                            "            end " ..
                            "            self.editButton({index = 0, label = tostring(finalDistance)}) " ..
                            "        end " ..
@@ -1339,19 +1381,19 @@ LUAStop--lua]]
 </Panel>
 XMLStop--xml]]
 
-className = "MiniInjector";
-versionNumber = "4.5.21";
-finishedLoading = false;
-debuggingEnabled = false;
-pingInitMinis = true;
-hideUpsideDownMinis = true;
-autoCalibrateEnabled = false;
-injectEverythingAllowed = false;
-injectEverythingActive = false;
-injectEverythingFrameCount = 0;
-updateEverythingActive = false;
-updateEverythingFrameCount = 0;
-updateEverythingIndex = 1;
+className = "MiniInjector"
+versionNumber = "4.5.36"
+finishedLoading = false
+debuggingEnabled = false
+pingInitMinis = true
+hideUpsideDownMinis = true
+autoCalibrateEnabled = false
+injectEverythingAllowed = false
+injectEverythingActive = false
+injectEverythingFrameCount = 0
+updateEverythingActive = false
+updateEverythingFrameCount = 0
+updateEverythingIndex = 1
 
 options = {
     hideText = false,
@@ -1372,7 +1414,7 @@ options = {
     initCurrentGUID = ""
 }
 
-initFigures = {};
+initFigures = {}
 
 function onSave()
     local save_state = JSON.encode({
@@ -1415,13 +1457,13 @@ function onLoad(save_state)
                 end
             end
             if saved_data.debugging_enabled ~= nil then
-                debuggingEnabled = saved_data.debugging_enabled;
+                debuggingEnabled = saved_data.debugging_enabled
             end
             if saved_data.ping_init_minis ~= nil then
-                pingInitMinis = saved_data.ping_init_minis;
+                pingInitMinis = saved_data.ping_init_minis
             end
             if saved_data.auto_calibrate_enabled ~= nil then
-                autoCalibrateEnabled = saved_data.auto_calibrate_enabled;
+                autoCalibrateEnabled = saved_data.auto_calibrate_enabled
             end
         end
     end
@@ -1445,11 +1487,11 @@ function onLoad(save_state)
     self.UI.setAttribute("mana", "text", options.mana)
     self.UI.setAttribute("extra", "text", options.extra)
 
-    self.setVar("className", "MiniInjector");
-    rebuildContextMenu();
+    self.setVar("className", "MiniInjector")
+    rebuildContextMenu()
     finishedLoading = true
-    self.setVar("finishedLoading", true);
-    self.setName("DND Mini Injector " .. versionNumber);
+    self.setVar("finishedLoading", true)
+    self.setName("DND Mini Injector " .. versionNumber)
 
     addHotkey("Initiative Forward", forwardInitiative, false)
     addHotkey("Initiative Backward", backwardInitiative, false)
@@ -1477,107 +1519,107 @@ function updateSettingUI()
 end
 
 function rebuildContextMenu()
-    self.clearContextMenu();
+    self.clearContextMenu()
     if (debuggingEnabled) then
-        self.addContextMenuItem("[X] Debugging", toggleDebug);
+        self.addContextMenuItem("[X] Debugging", toggleDebug)
     else
-        self.addContextMenuItem("[ ] Debugging", toggleDebug);
+        self.addContextMenuItem("[ ] Debugging", toggleDebug)
     end
     if (pingInitMinis) then
-        self.addContextMenuItem("[X] Ping Init Minis", togglePingInitMinis);
+        self.addContextMenuItem("[X] Ping Init Minis", togglePingInitMinis)
     else
-        self.addContextMenuItem("[ ] Ping Init Minis", togglePingInitMinis);
+        self.addContextMenuItem("[ ] Ping Init Minis", togglePingInitMinis)
     end
     if (autoCalibrateEnabled) then
-        self.addContextMenuItem("[X] Auto-Calibrate", toggleAutoCalibrate);
+        self.addContextMenuItem("[X] Auto-Calibrate", toggleAutoCalibrate)
     else
-        self.addContextMenuItem("[ ] Auto-Calibrate", toggleAutoCalibrate);
+        self.addContextMenuItem("[ ] Auto-Calibrate", toggleAutoCalibrate)
     end
-    self.addContextMenuItem("Update All Minis", updateEverything);
-    self.addContextMenuItem("Inject EVERYTHING", injectEverything);
+    self.addContextMenuItem("Update All Minis", updateEverything)
+    self.addContextMenuItem("Inject EVERYTHING", injectEverything)
 end
 
 function toggleDebug()
-    debuggingEnabled = not debuggingEnabled;
-    rebuildContextMenu();
+    debuggingEnabled = not debuggingEnabled
+    rebuildContextMenu()
 end
 
 function togglePingInitMinis()
-    pingInitMinis = not pingInitMinis;
-    rebuildContextMenu();
+    pingInitMinis = not pingInitMinis
+    rebuildContextMenu()
 end
 
 function updateEverything()
-    updateEverythingActive = true;
+    updateEverythingActive = true
 end
 
 function toggleAutoCalibrate()
-    autoCalibrateEnabled = not autoCalibrateEnabled;
+    autoCalibrateEnabled = not autoCalibrateEnabled
     if autoCalibrateEnabled then
-        print("Automatic calibration ENABLED. Injected minis will automatically be calibrated to the current grid.");
+        print("Automatic calibration ENABLED. Injected minis will automatically be calibrated to the current grid.")
     else
-        print("Automatic calibration DISABLED.");
+        print("Automatic calibration DISABLED.")
     end
-    rebuildContextMenu();
+    rebuildContextMenu()
 end
 
 function injectEverything()
     if injectEverythingAllowed == false then
-        print("INJECT EVERYTHING. This will inject movement tokens into literally every object in this save. Only use this in an empty save with only miniatures and measurement tools. Click it again to confirm.");
-        injectEverythingAllowed = true;
-        return;
+        print("INJECT EVERYTHING. This will inject movement tokens into literally every object in this save. Only use this in an empty save with only miniatures and measurement tools. Click it again to confirm.")
+        injectEverythingAllowed = true
+        return
     end
-    injectEverythingActive = true;
+    injectEverythingActive = true
 end
 
 function onUpdate()
     if injectEverythingActive == true then
-        injectEverythingFrameCount = injectEverythingFrameCount + 1;
+        injectEverythingFrameCount = injectEverythingFrameCount + 1
         if injectEverythingFrameCount >= 5 then
-            injectEverythingFrameCount = 0;
+            injectEverythingFrameCount = 0
             local allObjects = getAllObjects()
             for _, obj in ipairs(allObjects) do
                 if obj ~= self and obj ~= nil then
-                    objClassName = obj.getVar("className");
+                    objClassName = obj.getVar("className")
                     if objClassName ~= "MeasurementToken" and
                        objClassName ~= "MeasurementToken_Move" and
                        objClassName ~= "MeasurementTool" then
-                        print("[00ff00]Injecting[-] mini " .. obj.getName() .. ".");
-                        injectToken(obj);
-                        return;
+                        print("[00ff00]Injecting[-] mini " .. obj.getName() .. ".")
+                        injectToken(obj)
+                        return
                     end
                 end
             end
-            injectEverythingActive = false;
-            print("[00ff00]Inject EVERYTHING complete.[-]");
+            injectEverythingActive = false
+            print("[00ff00]Inject EVERYTHING complete.[-]")
         end
     end
 
     if updateEverythingActive == true then
-        updateEverythingFrameCount = updateEverythingFrameCount + 1;
+        updateEverythingFrameCount = updateEverythingFrameCount + 1
         if updateEverythingFrameCount >= 5 then
-            updateEverythingFrameCount = 0;
+            updateEverythingFrameCount = 0
             local allObjects = getAllObjects()
             for _, obj in ipairs(allObjects) do
                 if obj ~= self and obj ~= nil then
-                    objClassName = obj.getVar("className");
+                    objClassName = obj.getVar("className")
                     if objClassName == "MeasurementToken" then
-                        tokenVersion = obj.getVar("versionNumber");
+                        tokenVersion = obj.getVar("versionNumber")
                         if versionNumber ~= tokenVersion then
-                            print("[00ff00]Updating[-] mini " .. updateEverythingIndex .. ".");
-                            updateEverythingIndex = updateEverythingIndex + 1;
-                            injectToken(obj);
-                            return;
+                            print("[00ff00]Updating[-] mini " .. updateEverythingIndex .. ".")
+                            updateEverythingIndex = updateEverythingIndex + 1
+                            injectToken(obj)
+                            return
                         else
                             -- Reload the token anyway. A quick way to reload all minis.
-                            obj.reload();
+                            obj.reload()
                         end
                     end
                 end
             end
-            updateEverythingActive = false;
-            updateEverythingIndex = 1;
-            print("[00ff00]All minis updated.[-]");
+            updateEverythingActive = false
+            updateEverythingIndex = 1
+            print("[00ff00]All minis updated.[-]")
             if options.initActive == true then
                 Wait.frames(rollInitiative, 60)
             end
@@ -1590,18 +1632,18 @@ function onObjectSpawn(object)
         return
     end
     local dropWatch = function()
-        return object == nil or object.resting;
+        return object == nil or object.resting
     end
     local dropFunc = function()
         if object == nil then
             return
         end
         if object.getVar("className") == "MeasurementToken" then
-            tokenVersion = object.getVar("versionNumber");
+            tokenVersion = object.getVar("versionNumber")
             if versionNumber ~= tokenVersion then
-                print("[00ff00]Updating[-] spawned mini.");
-                injectToken(object);
-                return;
+                print("[00ff00]Updating[-] spawned mini.")
+                injectToken(object)
+                return
             else
                 object.call('resetScale')
                 object.call('toggleAlternateDiag')
@@ -1724,48 +1766,48 @@ function onEndEdit(player, value, id)
 end
 
 function onCollisionEnter(collision_info)
-    local object = collision_info.collision_object;
+    local object = collision_info.collision_object
     local hitList = Physics.cast({
         origin       = object.getBounds().center,
         direction    = {0,-1,0},
         type         = 1,
         max_distance = 10,
         debug        = false,
-    });
+    })
     local attemptCount = 1
     for _, hitTable in ipairs(hitList) do
         -- This hit makes sure the injector is the first object directly below the mini
         if hitTable ~= nil and hitTable.hit_object == self then
             if self.getRotationValue() == "[00ff00]INJECT[-]" then
-                objClassName = object.getVar("className");
+                objClassName = object.getVar("className")
                 if objClassName ~= "MiniInjector" and
                    objClassName ~= "MeasurementToken" and
                    objClassName ~= "MeasurementToken_Move" and
                    objClassName ~= "MeasurementTool" then
                     if debuggingEnabled == true then
-                        print("[00ff00]Injecting[-] mini " .. object.getName() .. ".");
+                        print("[00ff00]Injecting[-] mini " .. object.getName() .. ".")
                     end
-                    injectToken(object);
-                    break;
+                    injectToken(object)
+                    break
                 end
             elseif self.getRotationValue() == "[ff0000]REMOVE[-]" then
                 if object.getVar("className") == "MeasurementToken" then
                     if debuggingEnabled == true then
-                        print("[ff0000]Removing[-] injection from " .. object.getName() .. ".");
+                        print("[ff0000]Removing[-] injection from " .. object.getName() .. ".")
                     end
                     object.call("destroyMoveToken")
                     object.setLuaScript("")
-                    object.reload();
-                    break;
+                    object.reload()
+                    break
                 end
             else
                 error("Invalid rotation.")
-                break;
+                break
             end
         else
             attemptCount = attemptCount + 1
             if (debuggingEnabled) then
-                print("Did not find injector, index "..tostring(attemptCount)..".");
+                print("Did not find injector, index "..tostring(attemptCount)..".")
             end
         end
     end
@@ -1834,7 +1876,7 @@ function injectToken(object)
     end
     newScript = newScript:gsub('<Panel id="panel" position="0 0 -220"', '<Panel id="panel" position="0 0 ' .. object.getBounds().size.y / object.getScale().y * 110 .. '"')
     object.setLuaScript(newScript)
-    object.reload();
+    object.reload()
 end
 
 function getInitiativeFigures()
@@ -1986,7 +2028,7 @@ function updateInitPlayer(player)
                         end
                     end
                 end
-                player.pingTable(figureObj.getBounds().center);
+                player.pingTable(figureObj.getBounds().center)
             end
             -- no need for update, they are still present
             return
@@ -2024,7 +2066,7 @@ function updateInitPlayer(player)
                 end
             end
         end
-        player.pingTable(figureObj.getBounds().center);
+        player.pingTable(figureObj.getBounds().center)
     end
 end
 
@@ -2094,7 +2136,7 @@ function updateInitPlayerForward(player)
                 end
             end
         end
-        player.pingTable(figureObj.getBounds().center);
+        player.pingTable(figureObj.getBounds().center)
     end
 end
 
@@ -2168,7 +2210,7 @@ function updateInitPlayerBackward(player)
                 end
             end
         end
-        player.pingTable(figureObj.getBounds().center);
+        player.pingTable(figureObj.getBounds().center)
     end
 end
 
