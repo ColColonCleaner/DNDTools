@@ -20,10 +20,11 @@ The code for these tools is available [on Github.](https://github.com/ColColonCl
 
 ![DND Mini Injector Image](https://i.imgur.com/83uMYlZ.jpg "DND Mini Injector")
 # DND Mini Injector
-### Latest Version: 4.5.11
+### Latest Version: 4.5.41
 + **Injection.** 
   + Place a mini on the top of this panel to inject it, flip the panel over and place an injected mini on it to remove injection.
   + Removing injection does not remove saved settings for that mini.
+  + The asset bundle from [Conditions & Ruler for D&D 5e](https://steamcommunity.com/sharedfiles/filedetails/?id=2051577172) can be injected. Access to the status effects is available by clicking the left side of UI Bars. Note, this asset bundle can take a while to load when it's saved (a second or two), so it can make loading save games feel laggy for a few seconds after initially loading. I'll work on improving this if possible.
 + **Options.**
   + Click the center of a mini's UI to show/hide the settings panel.
   + Menu options shown in red are enabled, white are disabled.
@@ -32,6 +33,7 @@ The code for these tools is available [on Github.](https://github.com/ColColonCl
   + Injected UI can be rotated and moved up/down to match your mini. There are 'UI Height UP' and 'UI Rotate 90' shortcuts in the right-click menu for quick adjustment, with fine adjustment available in the settings panel.
   + Minis can be stabilized so that they don't fall over when set down.
   + PC minis are always visible through fog of war.
+  + NPC minis can be hidden from players via the right click menu.
 + **Movement.**
   + When an injected mini is picked up a token 1 square wide will spawn underneath facing the player. That token shows distance with DND rules in 5 foot increments.
   + All distances in these tools are with reference to the TTS square grid. Modifying that grid will affect the calculated distances.
