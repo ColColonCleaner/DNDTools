@@ -2,7 +2,7 @@
 -- Credit to HP Bar Writer by Kijan
 --[[LUAStart
 className = "MeasurementToken"
-versionNumber = "4.5.36"
+versionNumber = "4.5.41"
 scaleMultiplierX = 1.0
 scaleMultiplierY = 1.0
 scaleMultiplierZ = 1.0
@@ -138,113 +138,128 @@ function onSave()
 end
 
 function onLoad(save_state)
-    if save_state ~= "" then
-        -- ALRIGHTY, let's see which state data we need to use
-        local saved_data = JSON.decode(save_state)
-        local bestVersion = 0
-        if saved_data.saveVersion ~= nil then
-            bestVersion = saved_data.saveVersion
+    if stabilizeOnDrop == true and self.held_by_color == nil then
+        Wait.frames(stabilize, 1)
+    end
+
+    local object = self
+    local dropWatch = function()
+        return object == nil or object.resting
+    end
+    local dropFunc = function()
+        if object == nil then
+            return
         end
-        states = self.getStates()
-        if states ~= nil then
-            for _, s in pairs(states) do
-                test_data = JSON.decode(s.lua_script_state)
-                if test_data ~= nil and test_data.saveVersion ~= nil and test_data.saveVersion > bestVersion then
-                    saved_data = test_data
-                    bestVersion = test_data.saveVersion
-                    if debuggingEnabled then
-                        print(self.getName() .. " best version: " .. bestVersion)
+        if save_state ~= "" then
+            -- ALRIGHTY, let's see which state data we need to use
+            local saved_data = JSON.decode(save_state)
+            local bestVersion = 0
+            if saved_data.saveVersion ~= nil then
+                bestVersion = saved_data.saveVersion
+            end
+            states = object.getStates()
+            if states ~= nil then
+                for _, s in pairs(states) do
+                    test_data = JSON.decode(s.lua_script_state)
+                    if test_data ~= nil and test_data.saveVersion ~= nil and test_data.saveVersion > bestVersion then
+                        saved_data = test_data
+                        bestVersion = test_data.saveVersion
+                        if debuggingEnabled then
+                            print(object.getName() .. " best version: " .. bestVersion)
+                        end
                     end
                 end
             end
-        end
-        if saved_data.health then
-            for heal,_ in pairs(health) do
-                health[heal] = saved_data.health[heal]
-            end
-        end
-        if saved_data.mana then
-            for res,_ in pairs(mana) do
-                mana[res] = saved_data.mana[res]
-            end
-        end
-        if saved_data.extra then
-            for res,_ in pairs(extra) do
-                extra[res] = saved_data.extra[res]
-            end
-        end
-        if saved_data.options then
-            for opt,_ in pairs(options) do
-                if saved_data.options[opt] ~= nil then
-                    options[opt] = saved_data.options[opt]
+            if saved_data.health then
+                for heal,_ in pairs(health) do
+                    health[heal] = saved_data.health[heal]
                 end
             end
-        end
-        if saved_data.encodedAttachScales then
-            for _,encodedScale in pairs(saved_data.encodedAttachScales) do
+            if saved_data.mana then
+                for res,_ in pairs(mana) do
+                    mana[res] = saved_data.mana[res]
+                end
+            end
+            if saved_data.extra then
+                for res,_ in pairs(extra) do
+                    extra[res] = saved_data.extra[res]
+                end
+            end
+            if saved_data.options then
+                for opt,_ in pairs(options) do
+                    if saved_data.options[opt] ~= nil then
+                        options[opt] = saved_data.options[opt]
+                    end
+                end
+            end
+            if saved_data.encodedAttachScales then
+                for _,encodedScale in pairs(saved_data.encodedAttachScales) do
+                    if debuggingEnabled then
+                        print("loaded vector: " .. encodedScale.x .. ", " .. encodedScale.y .. ", " .. encodedScale.z)
+                    end
+                    table.insert(savedAttachScales, vector(encodedScale.x, encodedScale.y, encodedScale.z))
+                end
+            end
+            if saved_data.statNames then
+                for stat,_ in pairs(statNames) do
+                    statNames[stat] = saved_data.statNames[stat]
+                end
+            end
+            if saved_data.scale_multiplier_x ~= nil then
+                scaleMultiplierX = saved_data.scale_multiplier_x
+            end
+            if saved_data.scale_multiplier_y ~= nil then
+                scaleMultiplierY = saved_data.scale_multiplier_y
+            end
+            if saved_data.scale_multiplier_z ~= nil then
+                scaleMultiplierZ = saved_data.scale_multiplier_z
+            end
+            if saved_data.calibrated_once ~= nil then
+                calibratedOnce = saved_data.calibrated_once
+            end
+            if saved_data.player ~= nil then
+                player = saved_data.player
+            end
+            if saved_data.measureMove ~= nil then
+                measureMove = saved_data.measureMove
+            end
+            if saved_data.alternateDiag ~= nil then
+                alternateDiag = saved_data.alternateDiag
+            end
+            if saved_data.stabilizeOnDrop ~= nil then
+                stabilizeOnDrop = saved_data.stabilizeOnDrop
+            end
+            if saved_data.miniHighlight ~= nil then
+                miniHighlight = saved_data.miniHighlight
+            end
+            if saved_data.highlightToggle ~= nil then
+                highlightToggle = saved_data.highlightToggle
+            end
+            if saved_data.hideFromPlayers ~= nil then
+                hideFromPlayers = saved_data.hideFromPlayers
+                if player == true then
+                    hideFromPlayers = false
+                end
+            end
+            if saved_data.saveVersion ~= nil then
+                saveVersion = saved_data.saveVersion
                 if debuggingEnabled then
-                    print("loaded vector: " .. encodedScale.x .. ", " .. encodedScale.y .. ", " .. encodedScale.z)
+                    print(object.getName() .. " loading, version " .. saveVersion .. ".")
                 end
-                table.insert(savedAttachScales, vector(encodedScale.x, encodedScale.y, encodedScale.z))
             end
         end
-        if saved_data.statNames then
-            for stat,_ in pairs(statNames) do
-                statNames[stat] = saved_data.statNames[stat]
-            end
-        end
-        if saved_data.scale_multiplier_x ~= nil then
-            scaleMultiplierX = saved_data.scale_multiplier_x
-        end
-        if saved_data.scale_multiplier_y ~= nil then
-            scaleMultiplierY = saved_data.scale_multiplier_y
-        end
-        if saved_data.scale_multiplier_z ~= nil then
-            scaleMultiplierZ = saved_data.scale_multiplier_z
-        end
-        if saved_data.calibrated_once ~= nil then
-            calibratedOnce = saved_data.calibrated_once
-        end
-        if saved_data.player ~= nil then
-            player = saved_data.player
-        end
-        if saved_data.measureMove ~= nil then
-            measureMove = saved_data.measureMove
-        end
-        if saved_data.alternateDiag ~= nil then
-            alternateDiag = saved_data.alternateDiag
-        end
-        if saved_data.stabilizeOnDrop ~= nil then
-            stabilizeOnDrop = saved_data.stabilizeOnDrop
-        end
-        if saved_data.miniHighlight ~= nil then
-            miniHighlight = saved_data.miniHighlight
-        end
-        if saved_data.highlightToggle ~= nil then
-            highlightToggle = saved_data.highlightToggle
-        end
-        if saved_data.hideFromPlayers ~= nil then
-            hideFromPlayers = saved_data.hideFromPlayers
-        end
-        if saved_data.saveVersion ~= nil then
-            saveVersion = saved_data.saveVersion
-            if debuggingEnabled then
-                print(self.getName() .. " loading, version " .. saveVersion .. ".")
-            end
-        end
+        object.setVar("className", "MeasurementToken")
+        object.setVar("player", player)
+        object.setVar("measureMove", measureMove)
+        object.setVar("alternateDiag", alternateDiag)
+        object.setVar("stabilizeOnDrop", stabilizeOnDrop)
+        object.setVar("miniHighlight", miniHighlight)
+        object.setVar("highlightToggle", highlightToggle)
+        object.setVar("hideFromPlayers", hideFromPlayers)
+
+        Wait.frames(loadStageOne, 10)
     end
-    self.setVar("className", "MeasurementToken")
-    self.setVar("player", player)
-    self.setVar("measureMove", measureMove)
-    self.setVar("alternateDiag", alternateDiag)
-    self.setVar("stabilizeOnDrop", stabilizeOnDrop)
-    self.setVar("miniHighlight", miniHighlight)
-    self.setVar("highlightToggle", highlightToggle)
-    self.setVar("hideFromPlayers", hideFromPlayers)
-    if stabilizeOnDrop == true then
-        Wait.frames(stabilize, 1)
-    end
-    Wait.frames(loadStageOne, 10)
+    Wait.condition(dropFunc, dropWatch)
 end
 
 function loadStageOne()
@@ -340,6 +355,16 @@ function loadStageTwo()
                     self.UI.setAttribute("addSubS", "visibility", "")
                     self.UI.setAttribute("addSubE", "visibility", "")
                     self.UI.setAttribute("editPanel", "visibility", "")
+                    self.UI.setAttribute("leftSide1", "visibility", "")
+                    self.UI.setAttribute("editButton0", "visibility", "")
+                    self.UI.setAttribute("editButton1", "visibility", "")
+                    self.UI.setAttribute("editButtonS1", "visibility", "")
+                    self.UI.setAttribute("leftSide2", "visibility", "")
+                    self.UI.setAttribute("editButton2", "visibility", "")
+                    self.UI.setAttribute("editButtonS2", "visibility", "")
+                    self.UI.setAttribute("leftSide3", "visibility", "")
+                    self.UI.setAttribute("editButton3", "visibility", "")
+                    self.UI.setAttribute("editButtonS3", "visibility", "")
                 else
                     if injOptions.hideBar == true then
                         self.UI.setAttribute("progressBar", "visibility", "Black")
@@ -370,6 +395,16 @@ function loadStageTwo()
                         self.UI.setAttribute("addSubE", "visibility", "")
                         self.UI.setAttribute("editPanel", "visibility", "")
                     end
+                    self.UI.setAttribute("editButton0", "visibility", "Black")
+                    self.UI.setAttribute("leftSide1", "visibility", "Black")
+                    self.UI.setAttribute("editButton1", "visibility", "Black")
+                    self.UI.setAttribute("editButtonS1", "visibility", "Black")
+                    self.UI.setAttribute("leftSide2", "visibility", "Black")
+                    self.UI.setAttribute("editButton2", "visibility", "Black")
+                    self.UI.setAttribute("editButtonS2", "visibility", "Black")
+                    self.UI.setAttribute("leftSide3", "visibility", "Black")
+                    self.UI.setAttribute("editButton3", "visibility", "Black")
+                    self.UI.setAttribute("editButtonS3", "visibility", "Black")
                 end
             end
         end
@@ -535,6 +570,10 @@ function toggleDebug()
 end
 
 function toggleHideFromPlayers()
+    if player == true and hideFromPlayers == false then
+        print(self.getName() .. " is a player character, cannot hide.")
+        return
+    end
     hideFromPlayers = not hideFromPlayers
     if hideFromPlayers then
         aColors = Player.getAvailableColors()
@@ -596,6 +635,9 @@ function togglePlayer()
     self.UI.setAttribute("PlayerCharToggle", "textColor", player == true and "#AA2222" or "#FFFFFF")
     if player == true then
         resetInitiative()
+    end
+    if player == true and hideFromPlayers == true then
+        toggleHideFromPlayers()
     end
     Wait.frames(loadStageTwo, 1)
 end
@@ -694,33 +736,36 @@ end
 function onRotate(spin, flip, player_color, old_spin, old_flip)
     if flip ~= old_flip then
         destabilize()
-        local object = self
-        local rotateWatch = function()
-            if object == nil or object.resting then
-                return true
-            end
-            local currentRotation = object.getRotation()
-            local rotationTarget = object.getRotationSmooth()
-            return rotationTarget == nil or currentRotation:angle(rotationTarget) < 0.5
-        end
-        local rotateFunc = function()
-            if object == nil then
-                return
-            end
-            if stabilizeOnDrop == true then
-                if debuggingEnabled == true then
-                    print(self.getName() .. ": Stabilizing after rotation.")
+        if stabilizeOnDrop == true then
+            local object = self
+            local timeWaiting = os.clock() + 0.26
+            local rotateWatch = function()
+                if object == nil or object.resting then
+                    return true
                 end
-                stabilize()
+                local currentRotation = object.getRotation()
+                local rotationTarget = object.getRotationSmooth()
+                return os.clock() > timeWaiting and (rotationTarget == nil or currentRotation:angle(rotationTarget) < 0.5)
             end
+            local rotateFunc = function()
+                if object == nil then
+                    return
+                end
+                if stabilizeOnDrop == true then
+                    if debuggingEnabled == true then
+                        print(self.getName() .. ": Stabilizing after rotation.")
+                    end
+                    stabilize()
+                end
+            end
+            Wait.condition(rotateFunc, rotateWatch)
         end
-        Wait.condition(rotateFunc, rotateWatch)
     end
 end
 
 function onPickUp(pcolor)
     destabilize()
-    if measureMove == true and hideFromPlayers == false then
+    if measureMove == true and hideFromPlayers == false and finishedLoading == true then
         createMoveToken(pcolor, self)
     end
 end
@@ -735,11 +780,17 @@ function onDrop(dcolor)
 end
 
 function stabilize()
+    if debuggingEnabled == true then
+        print(self.getName() .. ": stabilizing.")
+    end
     local rb = self.getComponent("Rigidbody")
     rb.set("freezeRotation", true)
 end
 
 function destabilize()
+    if debuggingEnabled == true then
+        print(self.getName() .. ": de-stabilizing.")
+    end
     local rb = self.getComponent("Rigidbody")
     rb.set("freezeRotation", false)
 end
@@ -945,14 +996,14 @@ function add() onClick(-1, - 1, "add") end
 function sub() onClick(-1, - 1, "sub") end
 
 function onClick(player_in, value, id)
-    if id == "leftSide" then
+    if id == "leftSide1" or id == "leftSide2" or id == "leftSide3" then
         if showing ~= true then
             showAllButtons()
         else
             self.clearButtons()
             showing = false
         end
-    elseif id == "editButton" then
+    elseif id == "editButton0" or id == "editButton1" or id == "editButton2" or id == "editButton3" then
         if firstEdit == true or self.UI.getAttribute("editPanel", "active") == "False" or self.UI.getAttribute("editPanel", "active") == nil then
             self.UI.setAttribute("editPanel", "active", true)
             self.UI.setAttribute("statePanel", "active", false)
@@ -1002,7 +1053,7 @@ function onClick(player_in, value, id)
             self.UI.setAttribute("extraBar", "active", options.hideExtra == true and "False" or "True")
             self.UI.setAttribute("bars", "height", vertical + (options.hideExtra == true and -100 or 100))
         end, 1)
-    elseif id == "HB" or id == "editButtonS" then
+    elseif id == "HB" or id == "editButtonS1" or id == "editButtonS2" or id == "editButtonS3" then
         if options.showBarButtons then
             self.UI.setAttribute("addSub", "active", false)
             self.UI.setAttribute("addSubS", "active", false)
@@ -1235,16 +1286,16 @@ LUAStop--lua]]
     <VerticalLayout id="bars" height="300">
         <Panel id="hiddenButtonBar" active="false">
             <HorizontalLayout height="25" width="400">
-                 <Button id="editButton" color="#00000000"><Image image="UpArrow" preserveAspect="true"></Image></Button>
+                 <Button id="editButton0" color="#00000000"><Image image="UpArrow" preserveAspect="true"></Image></Button>
             </HorizontalLayout>
         </Panel>
         <Panel id="resourceBar" active="true">
             <ProgressBar id="progressBar" visibility="" height="100" width="600" showPercentageText="false" color="#000000FF" percentage="100" fillImageColor="#710000"></ProgressBar>
             <Text id="hpText" visibility="" height="100" width="600" text="10/10"></Text>
             <HorizontalLayout id="editButtonBar" height="100" width="600">
-                 <Button id="leftSide" text="" color="#00000000"></Button>
-                 <Button id="editButton" color="#00000000"></Button>
-                 <Button id="editButtonS" text="" color="#00000000"></Button>
+                 <Button id="leftSide1" text="" color="#00000000"></Button>
+                 <Button id="editButton1" color="#00000000"></Button>
+                 <Button id="editButtonS1" text="" color="#00000000"></Button>
             </HorizontalLayout>
             <Panel id="addSub" visibility="" height="100" width="825" active="false">
                 <HorizontalLayout spacing="625">
@@ -1257,9 +1308,9 @@ LUAStop--lua]]
             <ProgressBar id="progressBarS" visibility="" height="100" width="600" showPercentageText="false" color="#000000FF" percentage="100" fillImageColor="#000071"></ProgressBar>
             <Text id="manaText" visibility="" height="100" width="600" text="10/10"></Text>
             <HorizontalLayout id="editButtonBar" height="100" width="600">
-                 <Button id="leftSide" text="" color="#00000000"></Button>
-                 <Button id="editButton" color="#00000000"></Button>
-                 <Button id="editButtonS" text="" color="#00000000"></Button>
+                 <Button id="leftSide2" text="" color="#00000000"></Button>
+                 <Button id="editButton2" color="#00000000"></Button>
+                 <Button id="editButtonS2" text="" color="#00000000"></Button>
             </HorizontalLayout>
             <Panel id="addSubS" visibility="" height="100" width="825" active="false">
                 <HorizontalLayout spacing="625">
@@ -1272,9 +1323,9 @@ LUAStop--lua]]
             <ProgressBar id="extraProgress" visibility="" height="100" width="600" showPercentageText="false" color="#000000FF" percentage="100" fillImageColor="#FFCF00"></ProgressBar>
             <Text id="extraText" visibility="" height="100" width="600" text="10/10"></Text>
             <HorizontalLayout id="editButtonBar" height="100" width="600">
-                 <Button id="leftSide" text="" color="#00000000"></Button>
-                 <Button id="editButton" color="#00000000"></Button>
-                 <Button id="editButtonS" text="" color="#00000000"></Button>
+                 <Button id="leftSide3" text="" color="#00000000"></Button>
+                 <Button id="editButton3" color="#00000000"></Button>
+                 <Button id="editButtonS3" text="" color="#00000000"></Button>
             </HorizontalLayout>
             <Panel id="addSubE" visibility="" height="100" width="825" active="false">
                 <HorizontalLayout spacing="625">
@@ -1382,7 +1433,7 @@ LUAStop--lua]]
 XMLStop--xml]]
 
 className = "MiniInjector"
-versionNumber = "4.5.36"
+versionNumber = "4.5.41"
 finishedLoading = false
 debuggingEnabled = false
 pingInitMinis = true
@@ -1467,25 +1518,6 @@ function onLoad(save_state)
             end
         end
     end
-    if options.hideText then
-        self.UI.setAttribute("hideText", "value", "true")
-        self.UI.setAttribute("hideText", "text", "✘")
-        self.UI.setAttribute("hideText", "textColor", "#FFFFFF")
-    end
-    if options.editText then
-        self.UI.setAttribute("editText", "value", "true")
-        self.UI.setAttribute("editText", "text", "✘")
-        self.UI.setAttribute("editText", "textColor", "#FFFFFF")
-    end
-    if options.hideBar then
-        self.UI.setAttribute("hideBar", "value", "true")
-        self.UI.setAttribute("hideBar", "text", "✘")
-        self.UI.setAttribute("hideBar", "textColor", "#FFFFFF")
-    end
-
-    self.UI.setAttribute("hp", "text", options.hp)
-    self.UI.setAttribute("mana", "text", options.mana)
-    self.UI.setAttribute("extra", "text", options.extra)
 
     self.setVar("className", "MiniInjector")
     rebuildContextMenu()
@@ -1504,9 +1536,12 @@ function onLoad(save_state)
 end
 
 function updateSettingUI()
+    self.UI.setAttribute("hp", "text", options.hp)
+    self.UI.setAttribute("mana", "text", options.mana)
+    self.UI.setAttribute("extra", "text", options.extra)
+
     for opt,_ in pairs(options) do
         if opt == "measureMove" or opt == "alternateDiag" or opt == "playerChar" or opt == "hideBar" or opt == "hideText" or opt == "editText" then
-            self.UI.setAttribute(opt, "textColor", "#FFFFFF")
             if options[opt] then
                 self.UI.setAttribute(opt, "value", "true")
                 self.UI.setAttribute(opt, "text", "✘")
@@ -1514,6 +1549,7 @@ function updateSettingUI()
                 self.UI.setAttribute(opt, "value", "false")
                 self.UI.setAttribute(opt, "text", "")
             end
+            self.UI.setAttribute(opt, "textColor", "#FFFFFF")
         end
     end
 end
