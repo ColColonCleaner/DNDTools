@@ -2,7 +2,7 @@
 -- Credit to HP Bar Writer by Kijan
 --[[LUAStart
 className = "MeasurementToken"
-versionNumber = "4.5.41"
+versionNumber = "4.5.45"
 scaleMultiplierX = 1.0
 scaleMultiplierY = 1.0
 scaleMultiplierZ = 1.0
@@ -1433,7 +1433,7 @@ LUAStop--lua]]
 XMLStop--xml]]
 
 className = "MiniInjector"
-versionNumber = "4.5.41"
+versionNumber = "4.5.45"
 finishedLoading = false
 debuggingEnabled = false
 pingInitMinis = true
@@ -1445,6 +1445,8 @@ injectEverythingFrameCount = 0
 updateEverythingActive = false
 updateEverythingFrameCount = 0
 updateEverythingIndex = 1
+injectedFrameLimiter = 0
+collisionProcessing = {}
 
 options = {
     hideText = false,
@@ -1609,6 +1611,60 @@ function injectEverything()
 end
 
 function onUpdate()
+    if injectedFrameLimiter > 0 then
+        injectedFrameLimiter = injectedFrameLimiter - 1
+    end
+    if injectedFrameLimiter == 0 and #collisionProcessing > 0 then
+        local collision_info = table.remove(collisionProcessing)
+        local object = collision_info.collision_object
+        if object ~= nil then
+            local hitList = Physics.cast({
+                origin       = object.getBounds().center,
+                direction    = {0,-1,0},
+                type         = 1,
+                max_distance = 10,
+                debug        = false,
+            })
+            local attemptCount = 1
+            for _, hitTable in ipairs(hitList) do
+                -- This hit makes sure the injector is the first object directly below the mini
+                if hitTable ~= nil and hitTable.hit_object == self then
+                    if self.getRotationValue() == "[00ff00]INJECT[-]" then
+                        objClassName = object.getVar("className")
+                        if objClassName ~= "MiniInjector" and
+                           objClassName ~= "MeasurementToken" and
+                           objClassName ~= "MeasurementToken_Move" and
+                           objClassName ~= "MeasurementTool" then
+                            if debuggingEnabled == true then
+                                print("[00ff00]Injecting[-] mini " .. object.getName() .. ".")
+                            end
+                            injectToken(object)
+                            injectedFrameLimiter = 60
+                            break
+                        end
+                    elseif self.getRotationValue() == "[ff0000]REMOVE[-]" then
+                        if object.getVar("className") == "MeasurementToken" then
+                            if debuggingEnabled == true then
+                                print("[ff0000]Removing[-] injection from " .. object.getName() .. ".")
+                            end
+                            object.call("destroyMoveToken")
+                            object.setLuaScript("")
+                            object.reload()
+                            break
+                        end
+                    else
+                        error("Invalid rotation.")
+                        break
+                    end
+                else
+                    attemptCount = attemptCount + 1
+                    if (debuggingEnabled) then
+                        print("Did not find injector, index "..tostring(attemptCount)..".")
+                    end
+                end
+            end
+        end
+    end
     if injectEverythingActive == true then
         injectEverythingFrameCount = injectEverythingFrameCount + 1
         if injectEverythingFrameCount >= 5 then
@@ -1802,51 +1858,7 @@ function onEndEdit(player, value, id)
 end
 
 function onCollisionEnter(collision_info)
-    local object = collision_info.collision_object
-    local hitList = Physics.cast({
-        origin       = object.getBounds().center,
-        direction    = {0,-1,0},
-        type         = 1,
-        max_distance = 10,
-        debug        = false,
-    })
-    local attemptCount = 1
-    for _, hitTable in ipairs(hitList) do
-        -- This hit makes sure the injector is the first object directly below the mini
-        if hitTable ~= nil and hitTable.hit_object == self then
-            if self.getRotationValue() == "[00ff00]INJECT[-]" then
-                objClassName = object.getVar("className")
-                if objClassName ~= "MiniInjector" and
-                   objClassName ~= "MeasurementToken" and
-                   objClassName ~= "MeasurementToken_Move" and
-                   objClassName ~= "MeasurementTool" then
-                    if debuggingEnabled == true then
-                        print("[00ff00]Injecting[-] mini " .. object.getName() .. ".")
-                    end
-                    injectToken(object)
-                    break
-                end
-            elseif self.getRotationValue() == "[ff0000]REMOVE[-]" then
-                if object.getVar("className") == "MeasurementToken" then
-                    if debuggingEnabled == true then
-                        print("[ff0000]Removing[-] injection from " .. object.getName() .. ".")
-                    end
-                    object.call("destroyMoveToken")
-                    object.setLuaScript("")
-                    object.reload()
-                    break
-                end
-            else
-                error("Invalid rotation.")
-                break
-            end
-        else
-            attemptCount = attemptCount + 1
-            if (debuggingEnabled) then
-                print("Did not find injector, index "..tostring(attemptCount)..".")
-            end
-        end
-    end
+    table.insert(collisionProcessing, collision_info)
 end
 
 function injectToken(object)
