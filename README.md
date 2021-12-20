@@ -66,14 +66,15 @@ The code for these tools is available [on Github.](https://github.com/ColColonCl
   + [DND 5e Miniatures w/Auto-Sizing and Measurement](https://steamcommunity.com/sharedfiles/filedetails/?id=2359564131)
 
 # Floating Status Effects
-![Floating Status Effects Image](https://i.imgur.com/e3S1Rnp.jpg "Floating Status Effects")
+<img src="https://i.imgur.com/e3S1Rnp.jpg" width="500">
 
 + These status effect tokens can be placed on top of injected minis.
 + They will disappear and spawn a floating button above the mini showing the status.
 + Clicking the floating status button removes the status.
 
 # DND Measurement Tool
-![DND Measurement Tool Image](https://i.imgur.com/ncy9Hfm.jpg "DND Measurement Tool")
+<img src="https://i.imgur.com/ncy9Hfm.jpg" width="500">
+
 ### Latest Version: 2.30
 
 + Measurement uses DND rules in 5 foot increments.
@@ -85,7 +86,8 @@ The code for these tools is available [on Github.](https://github.com/ColColonCl
 + **Remember you can toggle displaying TTS grid lines in the options menu.**
 
 # Wall Spawner
-![Wall Spawner Image](https://i.imgur.com/9OEZSWC.jpg "Wall Spawner")
+<img src="https://i.imgur.com/9OEZSWC.jpg" width="500">
+
 ### Latest Version: 1.7
 
 + **[SHOWCASE VIDEO](https://www.youtube.com/watch?v=9xxFUDGJmbE)** 
@@ -98,7 +100,8 @@ The code for these tools is available [on Github.](https://github.com/ColColonCl
 + Change wall height and offset with the input fields.
 
 # Click Roller Strip
-![Click Roller Strip Image](https://i.imgur.com/EPYE26S.jpg "Click Roller Strip")
+<img src="https://i.imgur.com/EPYE26S.jpg" width="500">
+
 ### Latest Version: 3.0.2
 
 + Click buttons to spawn dice. Can spawn 4 rows of dice. Dice automatically resize as more are added.
@@ -108,14 +111,14 @@ The code for these tools is available [on Github.](https://github.com/ColColonCl
 + Dice and rolls are always visible, even inside hidden zones.
 
 # One World GridSaver Tokens
-![One World GridSaver Tokens Image](https://i.imgur.com/7sVcizo.jpg "One World GridSaver Tokens")
+<img src="https://i.imgur.com/7sVcizo.jpg" width="500">
 
 + These GridSaver tokens allow you to save TTS grid size/offset with your OneWorld maps.
 + When you 'BUILD' the OneWorld map with a GridSaver in it, the grid state that was saved with the token will come back.
 + Injected miniatures will be automatically resized to match the new grid.
 
 # 5e Fallout Armor Calculator
-![5e Fallout Armor Calculator Image](https://i.imgur.com/QHRVoBZ.jpg "5e Fallout Armor Calculator")
+<img src="https://i.imgur.com/QHRVoBZ.jpg" width="500">
 
 + [Wiki for 5e Fallout](http://5efallout.wikidot.com/)
 + Running a campain in the world of New Vegas at the moment.
