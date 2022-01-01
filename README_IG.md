@@ -25,7 +25,7 @@ The code for these tools is available [on Github.](https://github.com/ColColonCl
   + Removing injection does not remove saved settings for that mini.
   + The asset bundle from [Conditions & Ruler for D&D 5e](https://steamcommunity.com/sharedfiles/filedetails/?id=2051577172) can also be injected. Access to the status effects is available by clicking the left side of UI Bars. Note, this asset bundle can take a second or two to process when it's injected, so it can make loading save games feel laggy for a few seconds. I'll work on improving this if possible.
 + **Options.**
-  + Click the center of a mini's UI to show/hide the settings panel.
+  + Click the center of a mini's UI to show/hide the settings panel. Currently you can only interact with the front of UI ; there is a feature I'm trying to have added so the UI can be double-sided, please upvote this if you want that to happen: [Backface culling for XML UI](https://tabletopsimulator.nolt.io/11)
   + Menu options shown in red are enabled, white are disabled.
   + Settings set for the minis are synced between states if the mini has multiple.
   + Injected UI has 3 bars for information in red/blue/yellow. Red is used for health, the other two can be used for whatever suits you. Click the **right** side of the bars to show/hide bar adjustment buttons. Bars for PC minis are visible to everyone, and global visibility for NPC minis is optional.
