@@ -70,14 +70,15 @@ The code for these tools is available [on Github.](https://github.com/ColColonCl
 + Clicking the floating status button removes the status.
 
 # DND Measurement Tool
-### Latest Version: 2.30
+### Latest Version: 2.5.1
 
-+ Measurement uses DND rules in 5 foot increments.
-+ Diagonals on grids are the same distance as straight. Alternate diagonal movement coming soon.
-+ It can calibrate the grid of the table with the current distance measured. To calibrate, **REPLACE the description with a calibration code.** Type a distance prefixed with 'c' into the description. i.e. c50 calibrates the current distance as 50 feet. The tool and the object it's connected to should be placed in the center of their respective squares.
++ Pick up an object then pick up the measurement tool to display distance.
++ Measurement uses DND rules in 5 foot increments with either normal or alternate diagonal style.
 + The tool will always face the player using it while it's active.
 + Color of the line is the color of the tool.
 + While the tool is active it will stay in place when dropped, even if off the table.
++ It can calibrate the table's grid. Enable calibration in the right-click menu then set up a measurement. Enter how many feet the distance should be in that field and click away from it.
++ With alternate diagonal style enabled the calibration field only displays with fully vertical or horizontal measurements.
 + **Remember you can toggle displaying TTS grid lines in the options menu.**
 
 # Wall Spawner
