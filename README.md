@@ -88,7 +88,7 @@ The code for these tools is available [on Github.](https://github.com/ColColonCl
 + **Remember you can toggle displaying TTS grid lines in the options menu.**
 
 # Wall Spawner
-<img src="https://i.imgur.com/9OEZSWC.jpg" width="500">
+<img src="https://i.imgur.com/jF3X3ek.jpg" width="500">
 
 ### Latest Version: 1.7
 
