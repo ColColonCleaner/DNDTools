@@ -2,8 +2,9 @@
 ### Tools I've created/modified to make playing 5e DND (Fifth Edition Dungeons & Dragons) better for my group.
 
 + Mini injection with health bars, initiative tracking, 5e status effects, automatic resizing, and movement measured with DND rules.
-+ Wall spawner with adjustable color, transparency, and height.
++ Wall spawner with adjustable color, transparency, and height. Can also spawn floors and blocks to cover table areas.
 + Tabletop grid management with calibration to maps and saving to OneWorld.
++ Automatically resizing AOE markers and flight platforms.
 + Dice roller with save slots and modifiers, roll at advantage/disadvantage.
 
  **Code credit to the following workshops; their work has been built on for these tools:** 
