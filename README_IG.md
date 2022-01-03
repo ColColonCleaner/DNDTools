@@ -93,6 +93,14 @@ The code for these tools is available [on Github.](https://github.com/ColColonCl
 + Walls take color/transparency of the spawner.
 + Change wall height and offset with the input fields.
 
+# Automatically Resizing AOE Markers
+
++ Uses **[Saught's Spell AoE Hit Markers](https://steamcommunity.com/sharedfiles/filedetails/?id=2099498874)**
++ Includes: Cones, Circles, Cylinders, Domes, Cubes, and Flight Platforms.
++ The markers automatically resize to match the table's grid.
++ The markers are stabilized on drop, so they can be placed on slanted surfaces without tilting as a result.
++ Flight platforms must be locked in place for the hitboxes to work. 
+
 # Click Roller Strip
 ### Latest Version: 3.0.2
 
