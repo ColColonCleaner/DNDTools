@@ -2,7 +2,7 @@
 -- Credit to HP Bar Writer by Kijan
 --[[LUAStart
 className = "MeasurementToken"
-versionNumber = "4.5.45"
+versionNumber = "4.5.46"
 scaleMultiplierX = 1.0
 scaleMultiplierY = 1.0
 scaleMultiplierZ = 1.0
@@ -150,26 +150,29 @@ function onLoad(save_state)
         if object == nil then
             return
         end
+        local saved_data = nil
+        local bestVersion = 0
         if save_state ~= "" then
-            -- ALRIGHTY, let's see which state data we need to use
-            local saved_data = JSON.decode(save_state)
-            local bestVersion = 0
+            saved_data = JSON.decode(save_state)
             if saved_data.saveVersion ~= nil then
                 bestVersion = saved_data.saveVersion
             end
-            states = object.getStates()
-            if states ~= nil then
-                for _, s in pairs(states) do
-                    test_data = JSON.decode(s.lua_script_state)
-                    if test_data ~= nil and test_data.saveVersion ~= nil and test_data.saveVersion > bestVersion then
-                        saved_data = test_data
-                        bestVersion = test_data.saveVersion
-                        if debuggingEnabled then
-                            print(object.getName() .. " best version: " .. bestVersion)
-                        end
-                    end
+        end
+        -- ALRIGHTY, let's see which state data we need to use
+        states = object.getStates()
+        if states ~= nil then
+            for _, s in pairs(states) do
+                test_data = JSON.decode(s.lua_script_state)
+                if test_data ~= nil and test_data.saveVersion ~= nil and test_data.saveVersion > bestVersion then
+                    saved_data = test_data
+                    bestVersion = test_data.saveVersion
                 end
             end
+        end
+        if debuggingEnabled then
+            print(object.getName() .. " best version: " .. bestVersion)
+        end
+        if saved_data ~= nil then
             if saved_data.health then
                 for heal,_ in pairs(health) do
                     health[heal] = saved_data.health[heal]
@@ -1433,7 +1436,7 @@ LUAStop--lua]]
 XMLStop--xml]]
 
 className = "MiniInjector"
-versionNumber = "4.5.45"
+versionNumber = "4.5.46"
 finishedLoading = false
 debuggingEnabled = false
 pingInitMinis = true
