@@ -2,7 +2,7 @@
 -- Credit to HP Bar Writer by Kijan
 --[[LUAStart
 className = "MeasurementToken"
-versionNumber = "4.5.46"
+versionNumber = "4.5.47"
 scaleMultiplierX = 1.0
 scaleMultiplierY = 1.0
 scaleMultiplierZ = 1.0
@@ -1436,7 +1436,7 @@ LUAStop--lua]]
 XMLStop--xml]]
 
 className = "MiniInjector"
-versionNumber = "4.5.46"
+versionNumber = "4.5.47"
 finishedLoading = false
 debuggingEnabled = false
 pingInitMinis = true
@@ -1705,9 +1705,6 @@ function onUpdate()
                             updateEverythingIndex = updateEverythingIndex + 1
                             injectToken(obj)
                             return
-                        else
-                            -- Reload the token anyway. A quick way to reload all minis.
-                            obj.reload()
                         end
                     end
                 end
@@ -2535,11 +2532,6 @@ function rebuildUI()
         }
     })
     self.UI.setXmlTable(xmlUI)
-    -- Wait.frames(function()
-    --     local localNotecard = getObjectFromGUID("64b86f")
-    --     localNotecard.setLuaScript(self.UI.getXml())
-    --     localNotecard.reload()
-    -- end, 5)
 end
 
 function updateFromGuid(guid)
