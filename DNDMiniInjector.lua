@@ -2,7 +2,7 @@
 -- Credit to HP Bar Writer by Kijan
 --[[LUAStart
 className = "MeasurementToken"
-versionNumber = "4.5.47"
+versionNumber = "4.5.52"
 scaleMultiplierX = 1.0
 scaleMultiplierY = 1.0
 scaleMultiplierZ = 1.0
@@ -11,6 +11,7 @@ calibratedOnce = false
 debuggingEnabled = false
 onUpdateTriggerCount = 0
 onUpdateScale = 1.0
+onUpdateGridSize = 1.0
 loadTime = 1.0
 saveVersion = 1
 a = {}
@@ -151,9 +152,11 @@ function onLoad(save_state)
             return
         end
         local saved_data = nil
+        local my_saved_data = nil
         local bestVersion = 0
         if save_state ~= "" then
             saved_data = JSON.decode(save_state)
+            my_saved_data = saved_data
             if saved_data.saveVersion ~= nil then
                 bestVersion = saved_data.saveVersion
             end
@@ -207,6 +210,15 @@ function onLoad(save_state)
                 for stat,_ in pairs(statNames) do
                     statNames[stat] = saved_data.statNames[stat]
                 end
+            end
+            -- Check if we need to override the scale calibration
+            -- This state's calibration takes precedence over other states
+            if my_saved_data ~= nil and my_saved_data.calibrated_once == true then
+                saved_data.calibrated_once = my_saved_data.calibrated_once
+                saved_data.scale_multiplier_x = my_saved_data.scale_multiplier_x
+                saved_data.scale_multiplier_y = my_saved_data.scale_multiplier_y
+                saved_data.scale_multiplier_z = my_saved_data.scale_multiplier_z
+                options["heightModifier"] = my_saved_data.options["heightModifier"]
             end
             if saved_data.scale_multiplier_x ~= nil then
                 scaleMultiplierX = saved_data.scale_multiplier_x
@@ -421,7 +433,8 @@ function loadStageTwo()
     self.auto_raise = true
     self.interactable = true
 
-    onUpdateScale = 0.0
+    onUpdateScale = 1.0
+    onUpdateGridSize = 1.0
     loadTime = os.clock()
 
     instantiateTriggers()
@@ -526,6 +539,9 @@ function onUpdate()
             self.UI.setAttribute("extraBar", "active", options.hideExtra == true and "False" or "True")
             self.UI.setAttribute("bars", "height", vertical)
             onUpdateScale = self.getScale().y
+        end
+        if finishedLoading == true and onUpdateGridSize ~= Grid.sizeX then
+            resetScale()
         end
     end
 end
@@ -734,6 +750,7 @@ function resetScale()
     end
     scaleVector = vector(newScaleX, newScaleY, newScaleZ)
     self.setScale(scaleVector)
+    onUpdateGridSize = Grid.sizeX
 end
 
 function onRotate(spin, flip, player_color, old_spin, old_flip)
@@ -1436,7 +1453,7 @@ LUAStop--lua]]
 XMLStop--xml]]
 
 className = "MiniInjector"
-versionNumber = "4.5.47"
+versionNumber = "4.5.52"
 finishedLoading = false
 debuggingEnabled = false
 pingInitMinis = true
