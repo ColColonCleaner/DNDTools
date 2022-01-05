@@ -1,5 +1,5 @@
 className = "MeasurementTool"
-versionNumber = "2.5.1"
+versionNumber = "2.5.5"
 finishedLoading = false
 toggleMeasure = 0
 pickedUp = 0
@@ -13,6 +13,8 @@ enableCalibration = false
 alternateDiag = false
 finalDistance = 1
 
+savedStartPoint = nil
+savedEndPoint = nil
 
 function onSave()
     local save_state = JSON.encode({
@@ -146,19 +148,6 @@ function destabilize()
     rb.set("freezeRotation", false)
 end
 
-function getTrimmedVectorLines()
-    currentLines = self.getVectorLines()
-    trimmedVectorLines = {}
-    if currentLines ~= nil then
-        for _, curVect in ipairs(currentLines) do
-            if curVect ~= nil and math.abs(curVect.thickness - 0.1023) >= 0.0001 then
-                table.insert(trimmedVectorLines, curVect)
-            end
-        end
-    end
-    return trimmedVectorLines
-end
-
 function onObjectPickUp(player_color, targetObj)
     if targetObj == self then
         pickedUpColor = player_color
@@ -170,7 +159,7 @@ function onObjectPickUp(player_color, targetObj)
         -- if the last player to touch the stick picked up something else, remove measurements
         if player_color == pickedUpColor then
             toggleMeasure = 0
-            self.setVectorLines(getTrimmedVectorLines())
+            self.setVectorLines({})
         end
         colorName = player_color .. ""
         lastPickedUpObjects[colorName] = targetObj
@@ -270,20 +259,39 @@ function onUpdate()
     if pickedUpColor ~= nil then
         -- If measuring, face the player
         self.setRotation({x = 0, y = Player[pickedUpColor].getPointerRotation(), z = 0})
-        --Drawing the line between pole and selected object
-        newVectorLines = getTrimmedVectorLines()
-        table.insert(newVectorLines, {
-            points    = { self.positionToLocal({pointA[1],pointA[2],pointA[3]}), self.positionToLocal({pointB[1],pointB[2]+0.1,pointB[3]}) },
-            color     = self.getColorTint(),
-            thickness = 0.1023,
-            rotation  = {0,0,0},
-        })
-        self.setVectorLines(newVectorLines)
+
         if minDistance < 1.0 or alternateDiag == false then
             createActiveInputs()
         else
             destroyActiveInputs()
         end
+
+        -- Drawing the line between pole and selected object
+        newStartPoint = self.positionToLocal({pointA[1],pointA[2],pointA[3]})
+        newEndPoint = self.positionToLocal({pointB[1],pointB[2]+0.1,pointB[3]})
+
+        if savedStartPoint ~= nil and
+            savedEndPoint ~= nil and
+            savedStartPoint[1] == newStartPoint[1] and
+            savedStartPoint[2] == newStartPoint[2] and
+            savedStartPoint[3] == newStartPoint[3] and
+            savedEndPoint[1] == newEndPoint[1] and
+            savedEndPoint[2] == newEndPoint[2] and
+            savedEndPoint[3] == newEndPoint[3] then
+            return
+        end
+
+        savedStartPoint = newStartPoint
+        savedEndPoint = newEndPoint
+
+        newVectorLines = {}
+        table.insert(newVectorLines, {
+            points    = { newStartPoint, newEndPoint },
+            color     = self.getColorTint(),
+            thickness = 0.1023,
+            rotation  = {0,0,0},
+        })
+        self.setVectorLines(newVectorLines)
     end
 end
 
