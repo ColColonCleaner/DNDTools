@@ -2,7 +2,7 @@
 -- Credit to HP Bar Writer by Kijan
 --[[LUAStart
 className = "MeasurementToken"
-versionNumber = "4.5.52"
+versionNumber = "4.5.53"
 scaleMultiplierX = 1.0
 scaleMultiplierY = 1.0
 scaleMultiplierZ = 1.0
@@ -1453,10 +1453,11 @@ LUAStop--lua]]
 XMLStop--xml]]
 
 className = "MiniInjector"
-versionNumber = "4.5.52"
+versionNumber = "4.5.53"
 finishedLoading = false
 debuggingEnabled = false
 pingInitMinis = true
+initTableOnly = true
 hideUpsideDownMinis = true
 autoCalibrateEnabled = false
 injectEverythingAllowed = false
@@ -1493,6 +1494,7 @@ function onSave()
     local save_state = JSON.encode({
         debugging_enabled = debuggingEnabled,
         ping_init_minis = pingInitMinis,
+        init_table_only = initTableOnly,
         auto_calibrate_enabled = autoCalibrateEnabled,
         options = options,
     })
@@ -1534,6 +1536,9 @@ function onLoad(save_state)
             end
             if saved_data.ping_init_minis ~= nil then
                 pingInitMinis = saved_data.ping_init_minis
+            end
+            if saved_data.init_table_only ~= nil then
+                initTableOnly = saved_data.init_table_only
             end
             if saved_data.auto_calibrate_enabled ~= nil then
                 autoCalibrateEnabled = saved_data.auto_calibrate_enabled
@@ -1588,6 +1593,11 @@ function rebuildContextMenu()
     else
         self.addContextMenuItem("[ ] Ping Init Minis", togglePingInitMinis)
     end
+    if (initTableOnly) then
+        self.addContextMenuItem("[X] Init Table Only", toggleInitTableOnly)
+    else
+        self.addContextMenuItem("[ ] Init Table Only", toggleInitTableOnly)
+    end
     if (autoCalibrateEnabled) then
         self.addContextMenuItem("[X] Auto-Calibrate", toggleAutoCalibrate)
     else
@@ -1604,6 +1614,11 @@ end
 
 function togglePingInitMinis()
     pingInitMinis = not pingInitMinis
+    rebuildContextMenu()
+end
+
+function toggleInitTableOnly()
+    initTableOnly = not initTableOnly
     rebuildContextMenu()
 end
 
@@ -1946,67 +1961,25 @@ end
 
 function getInitiativeFigures()
     figures = {}
-    for k, v in pairs(getAllObjects()) do
-        if v.getVar("className") == "MeasurementToken" then
-            -- Grab miniature options
-            local objTable = v.getTable("options")
-            -- Only add minis that are initiative included
-            if objTable.initSettingsIncluded == true then
-                local player = v.getVar("player")
-                local colorTint = v.getColorTint()
-                if player == true then
-                    local miniHighlight = v.getVar("miniHighlight")
-                    if miniHighlight == "highlightWhite" then
-                        colorTint = Color.White
-                    elseif miniHighlight == "highlightBrown" then
-                        colorTint = Color.Brown
-                    elseif miniHighlight == "highlightRed" then
-                        colorTint = Color.Red
-                    elseif miniHighlight == "highlightOrange" then
-                        colorTint = Color.Orange
-                    elseif miniHighlight == "highlightYellow" then
-                        colorTint = Color.Yellow
-                    elseif miniHighlight == "highlightGreen" then
-                        colorTint = Color.Green
-                    elseif miniHighlight == "highlightTeal" then
-                        colorTint = Color.Teal
-                    elseif miniHighlight == "highlightBlue" then
-                        colorTint = Color.Blue
-                    elseif miniHighlight == "highlightPurple" then
-                        colorTint = Color.Purple
-                    elseif miniHighlight == "highlightPink" then
-                        colorTint = Color.Pink
-                    elseif miniHighlight == "highlightBlack" then
-                        colorTint = Color.Black
-                    end
-                else
-                    colorTint = Color.White
-                end
-                local figure = {
-                    nameHealth = v.getName() .. " " .. v.UI.getAttribute("hpText", "Text"),
-                    guidValue = v.getGUID(),
-                    initValue = tonumber(v.call("getInitiative", options.initActive)),
-                    initText = "",
-                    initMod = tonumber(objTable.initSettingsMod),
-                    initRolling = objTable.initSettingsRolling,
-                    player = player,
-                    name = v.getName(),
-                    obj = v,
-                    options = objTable,
-                    health = v.getTable("health"),
-                    colorTint = colorTint,
-                    colorHex = tintToHex(colorTint)
-                }
-                local initText = tostring(figure.initValue) .. ' ['
-                if figure.initMod == 0 then
-                    initText = initText .. '0]'
-                elseif figure.initMod > 0 then
-                    initText = initText .. '+' .. figure.initMod .. ']'
-                else
-                    initText = initText .. figure.initMod .. ']'
-                end
-                figure.initText = initText
-                table.insert(figures, figure)
+        if initTableOnly then
+        -- Only gather minis from the center of the table.
+        local hitList = Physics.cast({
+            origin       = {0, 15, 0},
+            direction    = {0, -1, 0},
+            max_distance = 0,
+            type         = 3,
+            size         = {88.07, 40, 52.02},
+            debug        = false,
+        })
+        for _, hitTable in ipairs(hitList) do
+            if hitTable ~= nil and hitTable.hit_object ~= nil and hitTable.hit_object.getVar("className") == "MeasurementToken" then
+                handleInitMiniature(hitTable.hit_object)
+            end
+        end
+    else
+        for k, v in pairs(getAllObjects()) do
+            if v.getVar("className") == "MeasurementToken" then
+                handleInitMiniature(v)
             end
         end
     end
@@ -2025,6 +1998,69 @@ function getInitiativeFigures()
     table.sort(figures, figureSorter)
     initFigures = figures
     return figures
+end
+
+function handleInitMiniature(miniature)
+    -- Grab miniature options
+    local objTable = miniature.getTable("options")
+    -- Only add minis that are initiative included
+    if objTable.initSettingsIncluded == true then
+        local player = miniature.getVar("player")
+        local colorTint = miniature.getColorTint()
+        if player == true then
+            local miniHighlight = miniature.getVar("miniHighlight")
+            if miniHighlight == "highlightWhite" then
+                colorTint = Color.White
+            elseif miniHighlight == "highlightBrown" then
+                colorTint = Color.Brown
+            elseif miniHighlight == "highlightRed" then
+                colorTint = Color.Red
+            elseif miniHighlight == "highlightOrange" then
+                colorTint = Color.Orange
+            elseif miniHighlight == "highlightYellow" then
+                colorTint = Color.Yellow
+            elseif miniHighlight == "highlightGreen" then
+                colorTint = Color.Green
+            elseif miniHighlight == "highlightTeal" then
+                colorTint = Color.Teal
+            elseif miniHighlight == "highlightBlue" then
+                colorTint = Color.Blue
+            elseif miniHighlight == "highlightPurple" then
+                colorTint = Color.Purple
+            elseif miniHighlight == "highlightPink" then
+                colorTint = Color.Pink
+            elseif miniHighlight == "highlightBlack" then
+                colorTint = Color.Black
+            end
+        else
+            colorTint = Color.White
+        end
+        local figure = {
+            nameHealth = miniature.getName() .. " " .. miniature.UI.getAttribute("hpText", "Text"),
+            guidValue = miniature.getGUID(),
+            initValue = tonumber(miniature.call("getInitiative", options.initActive)),
+            initText = "",
+            initMod = tonumber(objTable.initSettingsMod),
+            initRolling = objTable.initSettingsRolling,
+            player = player,
+            name = miniature.getName(),
+            obj = miniature,
+            options = objTable,
+            health = miniature.getTable("health"),
+            colorTint = colorTint,
+            colorHex = tintToHex(colorTint)
+        }
+        local initText = tostring(figure.initValue) .. ' ['
+        if figure.initMod == 0 then
+            initText = initText .. '0]'
+        elseif figure.initMod > 0 then
+            initText = initText .. '+' .. figure.initMod .. ']'
+        else
+            initText = initText .. figure.initMod .. ']'
+        end
+        figure.initText = initText
+        table.insert(figures, figure)
+    end
 end
 
 function resetInitiative()
