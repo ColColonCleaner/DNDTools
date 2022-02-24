@@ -2,7 +2,7 @@
 -- Credit to HP Bar Writer by Kijan
 --[[LUAStart
 className = "MeasurementToken"
-versionNumber = "4.5.53"
+versionNumber = "4.5.56"
 scaleMultiplierX = 1.0
 scaleMultiplierY = 1.0
 scaleMultiplierZ = 1.0
@@ -105,6 +105,7 @@ function calculateInitiative()
 end
 
 function onSave()
+    autoFogOfWarReveal()
     saveVersion = saveVersion + 1
     if debuggingEnabled then
         print(self.getName() .. " saving, version " .. saveVersion .. ".")
@@ -429,7 +430,8 @@ function loadStageTwo()
 
     updateHighlight()
 
-    self.ignore_fog_of_war = player
+    autoFogOfWarReveal()
+
     self.auto_raise = true
     self.interactable = true
 
@@ -457,6 +459,14 @@ function loadStageTwo()
 
     finishedLoading = true
     self.setVar("finishedLoading", true)
+end
+
+function autoFogOfWarReveal()
+    if player == true then
+        -- We're a PC, set IFOW for a single frame, then reset
+        self.ignore_fog_of_war = true
+        self.ignore_fog_of_war = false
+    end
 end
 
 function instantiateTriggers()
@@ -650,7 +660,7 @@ end
 
 function togglePlayer()
     player = not player
-    self.ignore_fog_of_war = player
+    autoFogOfWarReveal()
     self.UI.setAttribute("PlayerCharToggle", "textColor", player == true and "#AA2222" or "#FFFFFF")
     if player == true then
         resetInitiative()
@@ -1453,7 +1463,7 @@ LUAStop--lua]]
 XMLStop--xml]]
 
 className = "MiniInjector"
-versionNumber = "4.5.53"
+versionNumber = "4.5.56"
 finishedLoading = false
 debuggingEnabled = false
 pingInitMinis = true
@@ -1959,16 +1969,49 @@ function injectToken(object)
     object.reload()
 end
 
+function getOneWorldMap()
+    for _, obj in ipairs(getAllObjects()) do
+        if obj ~= self and obj ~= nil and obj.getName() == "_OW_vBase" then
+            return obj
+        end
+    end
+    return nil
+end
+
+function getMapBounds(debug)
+    local defaultBounds = {x = 88.07, y = 1, z = 52.02}
+    local oneWorldMap = getOneWorldMap()
+    if oneWorldMap ~= nil then
+        local oneWorldBounds = oneWorldMap.getBounds();
+        if oneWorldBounds.size.x > 10 then
+            if debuggingEnabled then
+                print("Using OneWorld map bounds.")
+            end
+            return oneWorldBounds.size
+        end
+        if debug or debuggingEnabled then
+            print("A OneWorld map is not deployed! Using default bounds.")
+        end
+        return defaultBounds
+    end
+    if debug or debuggingEnabled then
+        print("OneWorld is not available! Using default bounds.")
+    end
+    return defaultBounds
+end
+
 function getInitiativeFigures()
     figures = {}
         if initTableOnly then
         -- Only gather minis from the center of the table.
+        local checkBounds = getMapBounds(false)
+        checkBounds.y = 40
         local hitList = Physics.cast({
             origin       = {0, 15, 0},
             direction    = {0, -1, 0},
             max_distance = 0,
             type         = 3,
-            size         = {88.07, 40, 52.02},
+            size         = checkBounds,
             debug        = false,
         })
         for _, hitTable in ipairs(hitList) do
