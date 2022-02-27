@@ -2,7 +2,7 @@
 -- Credit to HP Bar Writer by Kijan
 --[[LUAStart
 className = "MeasurementToken"
-versionNumber = "4.5.56"
+versionNumber = "4.5.57"
 scaleMultiplierX = 1.0
 scaleMultiplierY = 1.0
 scaleMultiplierZ = 1.0
@@ -10,6 +10,7 @@ finishedLoading = false
 calibratedOnce = false
 debuggingEnabled = false
 onUpdateTriggerCount = 0
+onSaveFrameCount = 0
 onUpdateScale = 1.0
 onUpdateGridSize = 1.0
 loadTime = 1.0
@@ -61,6 +62,7 @@ function resetInitiative()
     options.initMockActive = false
     options.initMockValue = 0
     self.UI.setAttribute("InitValueInput", "text", options.initSettingsValue)
+    updateSave()
 end
 
 function getInitiative(inputActive)
@@ -80,6 +82,7 @@ function getInitiative(inputActive)
         if debuggingEnabled then
             print(self.getName() .. ' init real calc' .. options.initRealValue)
         end
+        updateSave()
         return options.initRealValue
     end
     if options.initMockActive == true then
@@ -93,6 +96,7 @@ function getInitiative(inputActive)
     if debuggingEnabled then
         print(self.getName() .. ' init mock calc ' .. options.initMockValue)
     end
+    updateSave()
     return options.initMockValue
 end
 
@@ -105,7 +109,24 @@ function calculateInitiative()
 end
 
 function onSave()
-    autoFogOfWarReveal()
+   return self.script_state
+end
+
+function updateSave()
+    if onSaveFrameCount > 0 then
+        onSaveFrameCount = 120
+        return
+    end
+    onSaveFrameCount = 120
+    startLuaCoroutine(self, "updateSaveActual")
+end
+
+function updateSaveActual()
+    while onSaveFrameCount > 0 do
+        onSaveFrameCount = onSaveFrameCount - 1
+        coroutine.yield(0)
+    end
+    autoFogOfWarReveal(false)
     saveVersion = saveVersion + 1
     if debuggingEnabled then
         print(self.getName() .. " saving, version " .. saveVersion .. ".")
@@ -116,7 +137,7 @@ function onSave()
             table.insert(encodedAttachScales, {x=scaleVector.x, y=scaleVector.y, z=scaleVector.z})
         end
     end
-    local save_state = JSON.encode({
+    self.script_state = JSON.encode({
         scale_multiplier_x = scaleMultiplierX,
         scale_multiplier_y = scaleMultiplierY,
         scale_multiplier_z = scaleMultiplierZ,
@@ -136,7 +157,7 @@ function onSave()
         hideFromPlayers = hideFromPlayers,
         saveVersion = saveVersion
     })
-    return save_state
+    return 1
 end
 
 function onLoad(save_state)
@@ -459,6 +480,7 @@ function loadStageTwo()
 
     finishedLoading = true
     self.setVar("finishedLoading", true)
+    updateSave()
 end
 
 function autoFogOfWarReveal()
@@ -528,6 +550,7 @@ function updateHighlight()
     elseif miniHighlight == "highlightBlack" then
         self.highlightOn(Color.Black)
     end
+    updateSave()
 end
 
 function onUpdate()
@@ -549,6 +572,7 @@ function onUpdate()
             self.UI.setAttribute("extraBar", "active", options.hideExtra == true and "False" or "True")
             self.UI.setAttribute("bars", "height", vertical)
             onUpdateScale = self.getScale().y
+            updateSave()
         end
         if finishedLoading == true and onUpdateGridSize ~= Grid.sizeX then
             resetScale()
@@ -586,16 +610,19 @@ end
 function uiHeightUp()
     options.heightModifier = options.heightModifier + 50
     self.UI.setAttribute("panel", "position", "0 0 -" .. options.heightModifier)
+    updateSave()
 end
 
 function uiRotate90()
     options.rotation = options.rotation + 90
     self.UI.setAttribute("panel", "rotation", options.rotation .. " 270 90")
+    updateSave()
 end
 
 function toggleDebug()
     debuggingEnabled = not debuggingEnabled
     rebuildContextMenu()
+    updateSave()
 end
 
 function toggleHideFromPlayers()
@@ -656,6 +683,7 @@ function toggleHideFromPlayers()
         savedAttachScales = {}
     end
     rebuildContextMenu()
+    updateSave()
 end
 
 function togglePlayer()
@@ -669,11 +697,13 @@ function togglePlayer()
         toggleHideFromPlayers()
     end
     Wait.frames(loadStageTwo, 1)
+    updateSave()
 end
 
 function toggleMeasure()
     measureMove = not measureMove
     self.UI.setAttribute("MeasureMoveToggle", "textColor", measureMove == true and "#AA2222" or "#FFFFFF")
+    updateSave()
 end
 
 function toggleAlternateDiag(thePlayer1)
@@ -691,12 +721,14 @@ function toggleAlternateDiag(thePlayer1)
                     if thePlayer2 ~= nil then
                         broadcastToAll("Injector is present. Use the injector to toggle measurement style.", thePlayer2.color)
                     end
+                    updateSave()
                     return
                 end
             end
         end
         alternateDiag = not alternateDiag
         self.UI.setAttribute("AlternateDiagToggle", "textColor", alternateDiag == true and "#AA2222" or "#FFFFFF")
+        updateSave()
     end
     Wait.frames(function() tad_Helper(myPlayer) end, 30)
 end
@@ -705,6 +737,7 @@ end
 function toggleStabilizeOnDrop()
     stabilizeOnDrop = not stabilizeOnDrop
     self.UI.setAttribute("StabilizeToggle", "textColor", stabilizeOnDrop == true and "#AA2222" or "#FFFFFF")
+    updateSave()
 end
 
 function toggleInitiativeInclude()
@@ -716,6 +749,7 @@ function toggleInitiativeInclude()
         options.initMockValue = 0
     end
     self.UI.setAttribute("InitiativeIncludeToggle", "textColor", options.initSettingsIncluded == true and "#AA2222" or "#FFFFFF")
+    updateSave()
 end
 
 function toggleInitiativeRolling()
@@ -727,6 +761,7 @@ function toggleInitiativeRolling()
         options.initMockValue = 0
     end
     self.UI.setAttribute("InitiativeRollingToggle", "textColor", options.initSettingsRolling == true and "#AA2222" or "#FFFFFF")
+    updateSave()
 end
 
 function calibrateScale()
@@ -739,6 +774,7 @@ function calibrateScale()
         print(self.getName() .. ": Calibrated scale with reference to grid.")
     end
     rebuildContextMenu()
+    updateSave()
 end
 
 function reloadMini()
@@ -761,6 +797,7 @@ function resetScale()
     scaleVector = vector(newScaleX, newScaleY, newScaleZ)
     self.setScale(scaleVector)
     onUpdateGridSize = Grid.sizeX
+    updateSave()
 end
 
 function onRotate(spin, flip, player_color, old_spin, old_flip)
@@ -950,6 +987,7 @@ function adjustHP(difference)
     self.UI.setAttribute("hpText", "text", health.value .. "/" .. health.max)
     self.UI.setAttribute("progressBar", "percentage", health.value / health.max * 100)
     updateRollers()
+    updateSave()
 end
 
 function setHP(newHP)
@@ -966,6 +1004,7 @@ function setHP(newHP)
     self.UI.setAttribute("hpText", "text", health.value .. "/" .. health.max)
     self.UI.setAttribute("progressBar", "percentage", health.value / health.max * 100)
     updateRollers()
+    updateSave()
 end
 
 function setHPMax(newHPMax)
@@ -986,6 +1025,7 @@ function setHPMax(newHPMax)
     self.UI.setAttribute("hpText", "text", health.value .. "/" .. health.max)
     self.UI.setAttribute("progressBar", "percentage", health.value / health.max * 100)
     updateRollers()
+    updateSave()
 end
 
 function updateRollers()
@@ -1016,6 +1056,7 @@ function onEndEdit(player, value, id)
             broadcastToAll(self.getName() .. " set initiative " .. options.initSettingsValue .. ".", player.color)
         end
     end
+    updateSave()
 end
 
 function onClickEx(params)
@@ -1193,6 +1234,7 @@ function onClick(player_in, value, id)
     end
     self.UI.setAttribute("hpText", "textColor", "#FFFFFF")
     self.UI.setAttribute("manaText", "textColor", "#FFFFFF")
+    updateSave()
 end
 
 function showAllButtons()
@@ -1463,7 +1505,7 @@ LUAStop--lua]]
 XMLStop--xml]]
 
 className = "MiniInjector"
-versionNumber = "4.5.56"
+versionNumber = "4.5.57"
 finishedLoading = false
 debuggingEnabled = false
 pingInitMinis = true
