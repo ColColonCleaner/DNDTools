@@ -2,7 +2,7 @@
 -- Credit to HP Bar Writer by Kijan
 --[[LUAStart
 className = "MeasurementToken"
-versionNumber = "4.5.57"
+versionNumber = "4.5.58"
 scaleMultiplierX = 1.0
 scaleMultiplierY = 1.0
 scaleMultiplierZ = 1.0
@@ -109,7 +109,8 @@ function calculateInitiative()
 end
 
 function onSave()
-   return self.script_state
+    autoFogOfWarReveal(false)
+    return self.script_state
 end
 
 function updateSave()
@@ -126,7 +127,6 @@ function updateSaveActual()
         onSaveFrameCount = onSaveFrameCount - 1
         coroutine.yield(0)
     end
-    autoFogOfWarReveal(false)
     saveVersion = saveVersion + 1
     if debuggingEnabled then
         print(self.getName() .. " saving, version " .. saveVersion .. ".")
@@ -1505,7 +1505,7 @@ LUAStop--lua]]
 XMLStop--xml]]
 
 className = "MiniInjector"
-versionNumber = "4.5.57"
+versionNumber = "4.5.58"
 finishedLoading = false
 debuggingEnabled = false
 pingInitMinis = true

@@ -24,7 +24,7 @@
 # DND Mini Injector
 <img src="https://i.imgur.com/83uMYlZ.jpg" width="500">
 
-### Latest Version: 4.5.57
+### Latest Version: 4.5.58
 + **Injection.** 
   + Place a mini on the top of this panel to inject it, flip the panel over and place an injected mini on it to remove injection.
   + Removing injection does not remove saved settings for that mini.
