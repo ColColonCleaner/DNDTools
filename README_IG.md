@@ -21,7 +21,7 @@
 ### Full table with all these tools available [HERE](https://steamcommunity.com/sharedfiles/filedetails/?id=2455649013)
 
 # DND Mini Injector
-### Latest Version: 4.5.52
+### Latest Version: 4.5.57
 + **Injection.** 
   + Place a mini on the top of this panel to inject it, flip the panel over and place an injected mini on it to remove injection.
   + Removing injection does not remove saved settings for that mini.
@@ -112,11 +112,25 @@
 + Roll results are displayed in order added to the tower.
 + Dice and rolls are always visible, even inside hidden zones.
 
-# One World GridSaver Tokens
+# OneWorld Fog-Of-War Spawner
+### Latest Version: 2.0
+
++ Click the button on top and it will spawn a fog-of-war zone and animate it into place.
++ The zone tracks the currently deployed OneWorld map and will perfectly cover it.
++ If OneWorld is not available/deployed it will use the default 'Custom Rectangle' table bounds.
+
+# OneWorld GridSaver Tokens
+### Latest Version: 1.0
 
 + These GridSaver tokens allow you to save TTS grid size/offset with your OneWorld maps.
 + When you 'BUILD' the OneWorld map with a GridSaver in it, the grid state that was saved with the token will come back.
 + Injected miniatures will be automatically resized to match the new grid.
+
+# OneWorld LineSaver Tokens
+### Latest Version: 1.0.2
+
++ These LineSaver tokens allow you to save lines/drawings with your OneWorld maps.
++ Instructions are provided on the tokens themselves.
 
 # 5e Fallout Armor Calculator
 
