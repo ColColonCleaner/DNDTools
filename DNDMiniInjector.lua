@@ -2,7 +2,7 @@
 -- Credit to HP Bar Writer by Kijan
 --[[LUAStart
 className = "MeasurementToken"
-versionNumber = "4.5.58"
+versionNumber = "4.6.6"
 scaleMultiplierX = 1.0
 scaleMultiplierY = 1.0
 scaleMultiplierZ = 1.0
@@ -108,11 +108,6 @@ function calculateInitiative()
     end
 end
 
-function onSave()
-    autoFogOfWarReveal(false)
-    return self.script_state
-end
-
 function updateSave()
     if onSaveFrameCount > 0 then
         onSaveFrameCount = 120
@@ -160,18 +155,14 @@ function updateSaveActual()
     return 1
 end
 
-function onLoad(save_state)
-    if stabilizeOnDrop == true and self.held_by_color == nil then
-        Wait.frames(stabilize, 1)
-    end
 
-    local object = self
-    local dropWatch = function()
-        return object == nil or object.resting
-    end
-    local dropFunc = function()
-        if object == nil then
-            return
+function onLoad(save_state)
+
+    function onLoad_helper()
+        coroutine.yield(0)
+        if stabilizeOnDrop == true and self.held_by_color == nil then
+            coroutine.yield(0)
+            stabilize()
         end
         local saved_data = nil
         local my_saved_data = nil
@@ -184,18 +175,19 @@ function onLoad(save_state)
             end
         end
         -- ALRIGHTY, let's see which state data we need to use
-        states = object.getStates()
+        states = self.getStates()
         if states ~= nil then
             for _, s in pairs(states) do
                 test_data = JSON.decode(s.lua_script_state)
                 if test_data ~= nil and test_data.saveVersion ~= nil and test_data.saveVersion > bestVersion then
                     saved_data = test_data
                     bestVersion = test_data.saveVersion
+                    coroutine.yield(0)
                 end
             end
         end
         if debuggingEnabled then
-            print(object.getName() .. " best version: " .. bestVersion)
+            print(self.getName() .. " best version: " .. bestVersion)
         end
         if saved_data ~= nil then
             if saved_data.health then
@@ -226,6 +218,7 @@ function onLoad(save_state)
                         print("loaded vector: " .. encodedScale.x .. ", " .. encodedScale.y .. ", " .. encodedScale.z)
                     end
                     table.insert(savedAttachScales, vector(encodedScale.x, encodedScale.y, encodedScale.z))
+                    coroutine.yield(0)
                 end
             end
             if saved_data.statNames then
@@ -281,29 +274,35 @@ function onLoad(save_state)
             if saved_data.saveVersion ~= nil then
                 saveVersion = saved_data.saveVersion
                 if debuggingEnabled then
-                    print(object.getName() .. " loading, version " .. saveVersion .. ".")
+                    print(self.getName() .. " loading, version " .. saveVersion .. ".")
                 end
             end
         end
-        object.setVar("className", "MeasurementToken")
-        object.setVar("player", player)
-        object.setVar("measureMove", measureMove)
-        object.setVar("alternateDiag", alternateDiag)
-        object.setVar("stabilizeOnDrop", stabilizeOnDrop)
-        object.setVar("miniHighlight", miniHighlight)
-        object.setVar("highlightToggle", highlightToggle)
-        object.setVar("hideFromPlayers", hideFromPlayers)
+        self.setVar("className", "MeasurementToken")
+        self.setVar("player", player)
+        self.setVar("measureMove", measureMove)
+        self.setVar("alternateDiag", alternateDiag)
+        self.setVar("stabilizeOnDrop", stabilizeOnDrop)
+        self.setVar("miniHighlight", miniHighlight)
+        self.setVar("highlightToggle", highlightToggle)
+        self.setVar("hideFromPlayers", hideFromPlayers)
 
-        Wait.frames(loadStageOne, 10)
+        coroutine.yield(0)
+        loadStageOne()
+        coroutine.yield(0)
+        loadStageTwo()
+        coroutine.yield(0)
+
+        return 1
     end
-    Wait.condition(dropFunc, dropWatch)
+    startLuaCoroutine(self, "onLoad_helper")
 end
 
 function loadStageOne()
     local script = self.getLuaScript()
     local xml = script:sub(script:find("StartXML")+8, script:find("StopXML")-1)
     self.UI.setXml(xml)
-    Wait.frames(loadStageTwo, 10)
+    coroutine.yield(0)
 end
 
 function loadStageTwo()
@@ -318,18 +317,22 @@ function loadStageTwo()
     self.UI.setAttribute("increment", "text", options.incrementBy)
     self.UI.setAttribute("InitModInput", "text", options.initSettingsMod)
     self.UI.setAttribute("InitValueInput", "text", options.initSettingsValue)
+    coroutine.yield(0)
 
     for i,j in pairs(statNames) do
         if j == true then
             self.UI.setAttribute(i, "active", true)
+            coroutine.yield(0)
         end
     end
-    Wait.frames(function() self.UI.setAttribute("statePanel", "width", getStatsCount()*300) end, 1)
+    coroutine.yield(0)
+    self.UI.setAttribute("statePanel", "width", getStatsCount()*300)
 
     if options.showBarButtons == true then
         self.UI.setAttribute("addSub", "active", true)
         self.UI.setAttribute("addSubS", "active", true)
         self.UI.setAttribute("addSubE", "active", true)
+        coroutine.yield(0)
     end
 
     if health.max == 0 then
@@ -352,6 +355,7 @@ function loadStageTwo()
     self.UI.setAttribute("addSubS", "active", options.showBarButtons == true and "True" or "False")
     self.UI.setAttribute("addSubE", "active", options.showBarButtons == true and "True" or "False")
     self.UI.setAttribute("panel", "rotation", options.rotation .. " 270 90")
+    coroutine.yield(0)
 
     self.UI.setAttribute("PlayerCharToggle", "textColor", player == true and "#AA2222" or "#FFFFFF")
     self.UI.setAttribute("MeasureMoveToggle", "textColor", measureMove == true and "#AA2222" or "#FFFFFF")
@@ -363,9 +367,11 @@ function loadStageTwo()
     self.UI.setAttribute("HB", "textColor", options.showBarButtons == true and "#AA2222" or "#FFFFFF")
     self.UI.setAttribute("BZ", "textColor", options.belowZero == true and "#AA2222" or "#FFFFFF")
     self.UI.setAttribute("AM", "textColor", options.aboveMax == true and "#AA2222" or "#FFFFFF")
+    coroutine.yield(0)
 
     self.UI.setAttribute("InitiativeIncludeToggle", "textColor", options.initSettingsIncluded == true and "#AA2222" or "#FFFFFF")
     self.UI.setAttribute("InitiativeRollingToggle", "textColor", options.initSettingsRolling == true and "#AA2222" or "#FFFFFF")
+    coroutine.yield(0)
 
     -- Look for the mini injector, if available
     local allObjects = getAllObjects()
@@ -381,6 +387,7 @@ function loadStageTwo()
                 local injOptions = obj.getTable("options")
                 alternateDiag = injOptions.alternateDiag
                 self.UI.setAttribute("AlternateDiagToggle", "textColor", alternateDiag == true and "#AA2222" or "#FFFFFF")
+                coroutine.yield(0)
                 if player == true then
                     self.UI.setAttribute("progressBar", "visibility", "")
                     self.UI.setAttribute("progressBarS", "visibility", "")
@@ -402,6 +409,7 @@ function loadStageTwo()
                     self.UI.setAttribute("leftSide3", "visibility", "")
                     self.UI.setAttribute("editButton3", "visibility", "")
                     self.UI.setAttribute("editButtonS3", "visibility", "")
+                    coroutine.yield(0)
                 else
                     if injOptions.hideBar == true then
                         self.UI.setAttribute("progressBar", "visibility", "Black")
@@ -432,6 +440,7 @@ function loadStageTwo()
                         self.UI.setAttribute("addSubE", "visibility", "")
                         self.UI.setAttribute("editPanel", "visibility", "")
                     end
+                    coroutine.yield(0)
                     self.UI.setAttribute("editButton0", "visibility", "Black")
                     self.UI.setAttribute("leftSide1", "visibility", "Black")
                     self.UI.setAttribute("editButton1", "visibility", "Black")
@@ -442,16 +451,17 @@ function loadStageTwo()
                     self.UI.setAttribute("leftSide3", "visibility", "Black")
                     self.UI.setAttribute("editButton3", "visibility", "Black")
                     self.UI.setAttribute("editButtonS3", "visibility", "Black")
+                    coroutine.yield(0)
                 end
             end
         end
     end
 
     rebuildContextMenu()
+    coroutine.yield(0)
 
     updateHighlight()
-
-    autoFogOfWarReveal()
+    coroutine.yield(0)
 
     self.auto_raise = true
     self.interactable = true
@@ -461,6 +471,7 @@ function loadStageTwo()
     loadTime = os.clock()
 
     instantiateTriggers()
+    coroutine.yield(0)
 
     if hideFromPlayers then
         aColors = Player.getAvailableColors()
@@ -476,18 +487,36 @@ function loadStageTwo()
         end
         self.setInvisibleTo(aColors)
         -- In this case attachments are already shrunk, don't worry about them
+        coroutine.yield(0)
     end
+
+    updateSave()
+
+    autoFogOfWarReveal()
 
     finishedLoading = true
     self.setVar("finishedLoading", true)
-    updateSave()
 end
 
+function onObjectSpawn(object)
+    if object.type == "FogOfWar" then
+        Wait.time(function() autoFogOfWarReveal() end, 5)
+    end
+end
+
+function afowr_helper()
+    coroutine.yield(0)
+    self.ignore_fog_of_war = true
+    self.ignore_fog_of_war = false
+    coroutine.yield(0)
+    self.ignore_fog_of_war = true
+    self.ignore_fog_of_war = false
+    return 1
+end
 function autoFogOfWarReveal()
     if player == true then
         -- We're a PC, set IFOW for a single frame, then reset
-        self.ignore_fog_of_war = true
-        self.ignore_fog_of_war = false
+        startLuaCoroutine(self, "afowr_helper")
     end
 end
 
@@ -502,6 +531,7 @@ function instantiateTriggers()
                 -- that simply calls our real target function
                 self.AssetBundle.playTriggerEffect(i - 1)
             end
+            coroutine.yield(0)
         end
     end
 end
@@ -870,6 +900,9 @@ end
 
 function createMoveToken(mcolor, mtoken)
     destroyMoveToken()
+    if finishedLoading == false then
+        return
+    end
     tokenRot = Player[mcolor].getPointerRotation()
     movetokenparams = {
         image = "http://cloud-3.steamusercontent.com/ugc/1021697601906583980/C63D67188FAD8B02F1B58E17C7B1DB304B7ECBE3/",
@@ -1505,7 +1538,7 @@ LUAStop--lua]]
 XMLStop--xml]]
 
 className = "MiniInjector"
-versionNumber = "4.5.58"
+versionNumber = "4.6.6"
 finishedLoading = false
 debuggingEnabled = false
 pingInitMinis = true
