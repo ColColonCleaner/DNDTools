@@ -7,17 +7,6 @@
 + Automatically resizing AOE markers and flight platforms.
 + Dice roller with save slots and modifiers, roll at advantage/disadvantage.
 
- **Code credit to the following workshops; their work has been built on for these tools:** 
-[Centimeter Ruler](https://steamcommunity.com/sharedfiles/filedetails/?id=2063724696) /
-[Self Measuring Movement Scripted Bases](https://steamcommunity.com/sharedfiles/filedetails/?id=2069900392) /
-[HP Bar Writer](https://steamcommunity.com/sharedfiles/filedetails/?id=1403813124) /
-[Condition (and spell) Tokens DnD 5e](https://steamcommunity.com/sharedfiles/filedetails/?id=2227786087) /
-[Object Stabilizers](https://steamcommunity.com/sharedfiles/filedetails/?id=2359564131) /
-[Miniature HUD Utility](https://steamcommunity.com/sharedfiles/filedetails/?id=1694376433) /
-[Improved Dice Roller](https://steamcommunity.com/sharedfiles/filedetails/?id=2134616469) /
-[Click Roller Strip](https://steamcommunity.com/sharedfiles/filedetails/?id=1092390834) /
-[Saught's Spell AoE Hit Markers](https://steamcommunity.com/sharedfiles/filedetails/?id=2099498874)
-
 ### Full table with all these tools available [HERE](https://steamcommunity.com/sharedfiles/filedetails/?id=2455649013) 
 <img src="https://i.imgur.com/NQHSpI0.jpg" width="200">
 
@@ -53,6 +42,7 @@
   + For NPCs they are always white regardless of highlight/coloring.
 + **Initiative.**
   + Minis can either roll initiative automatically with 'Initiative Mod' or enter it manually in 'Initiative Value' if rolling is disabled. 'Initiative Value' resets to 100 each time initiative ends.
+  + By default initiative minis must be in the center of the table, over the map zone. The OneWorld map zone bounds are used for this. If OneWorld is not available the default 'Custom Rectangle' table map bounds are used. This feature can be toggled with 'Init Table Only' in the right-click menu.
   + Initiative Mod is used to break ties, followed by mini name. This isn't *fully* accurate to 5e but it's close enough to the actual rule.
   + PCs are displayed on the injector's UI with a red bar, NPCs with a grey one.
   + Current initiative position is tracked with an arrow in the notes and a light grey highlight on the UI.
@@ -152,3 +142,14 @@
 + Running a campain in the world of New Vegas at the moment.
 + The conversion 5e Fallout uses a custom armor system. This calculator automates that.
 + Power armor is not included yet.
+
+ **Code credit to the following workshops; their work has been built on for these tools:** 
+[Centimeter Ruler](https://steamcommunity.com/sharedfiles/filedetails/?id=2063724696) /
+[Self Measuring Movement Scripted Bases](https://steamcommunity.com/sharedfiles/filedetails/?id=2069900392) /
+[HP Bar Writer](https://steamcommunity.com/sharedfiles/filedetails/?id=1403813124) /
+[Condition (and spell) Tokens DnD 5e](https://steamcommunity.com/sharedfiles/filedetails/?id=2227786087) /
+[Object Stabilizers](https://steamcommunity.com/sharedfiles/filedetails/?id=2359564131) /
+[Miniature HUD Utility](https://steamcommunity.com/sharedfiles/filedetails/?id=1694376433) /
+[Improved Dice Roller](https://steamcommunity.com/sharedfiles/filedetails/?id=2134616469) /
+[Click Roller Strip](https://steamcommunity.com/sharedfiles/filedetails/?id=1092390834) /
+[Saught's Spell AoE Hit Markers](https://steamcommunity.com/sharedfiles/filedetails/?id=2099498874)
