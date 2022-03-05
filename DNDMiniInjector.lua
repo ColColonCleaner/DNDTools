@@ -2,7 +2,7 @@
 -- Credit to HP Bar Writer by Kijan
 --[[LUAStart
 className = "MeasurementToken"
-versionNumber = "4.6.8"
+versionNumber = "4.6.9"
 scaleMultiplierX = 1.0
 scaleMultiplierY = 1.0
 scaleMultiplierZ = 1.0
@@ -495,6 +495,8 @@ function loadStageTwo()
     updateSave()
 
     autoFogOfWarReveal()
+
+    return 1
 end
 
 function onObjectSpawn(object)
@@ -732,7 +734,7 @@ function togglePlayer()
     if player == true and hideFromPlayers == true then
         toggleHideFromPlayers()
     end
-    Wait.frames(loadStageTwo, 1)
+    startLuaCoroutine(self, "loadStageTwo")
     updateSave()
 end
 
@@ -1544,7 +1546,7 @@ LUAStop--lua]]
 XMLStop--xml]]
 
 className = "MiniInjector"
-versionNumber = "4.6.8"
+versionNumber = "4.6.9"
 finishedLoading = false
 debuggingEnabled = false
 pingInitMinis = true
