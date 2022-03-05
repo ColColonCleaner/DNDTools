@@ -13,6 +13,116 @@ function onload(saved_data)
         color = {0,0,0},
         font_color = {1,1,1}
     })
+    self.clearContextMenu()
+    self.addContextMenuItem("Hide OW Minimaps", hideOWMinimaps, true)
+    self.addContextMenuItem("Hide OW Hub", hideOWHub, true)
+end
+
+function hideOWMinimaps()
+    print("Hiding OneWorld Minimaps!")
+    spawnObjectData({
+        data = {
+            Name = "FogOfWarTrigger",
+            Transform = {
+                posX = 65.0,
+                posY = 65.0,
+                posZ = 65.0,
+                rotX = 0.0,
+                rotY = 0.0,
+                rotZ = 0.0,
+                scaleX = 3.0,
+                scaleY = 0.13,
+                scaleZ = 3.0
+            },
+            Nickname = "",
+            Description = "",
+            GMNotes = "",
+            ColorDiffuse = {
+                r = 0.25,
+                g = 0.25,
+                b = 0.25,
+                a = 0.1025644
+            },
+            LayoutGroupSortIndex = 0,
+            Value = 0,
+            Locked = true,
+            Grid = true,
+            Snap = true,
+            IgnoreFoW = false,
+            MeasureMovement = false,
+            DragSelectable = true,
+            Autoraise = true,
+            Sticky = true,
+            Tooltip = true,
+            GridProjection = false,
+            HideWhenFaceDown = false,
+            Hands = false,
+            FogColor = "Black",
+            FogHidePointers = true,
+            FogReverseHiding = false,
+            FogSeethrough = false,
+            LuaScript = "",
+            LuaScriptState = "",
+            XmlUI = ""
+        }
+    })
+end
+
+function hideOWHub()
+    local owHub = getOneWorldHub()
+    if owHub == nil then
+        print("OneWorld is not available! Unable to spawn hidden zone.")
+        return
+    end
+    local pos = owHub.getPosition()
+    local rot = owHub.getRotation()
+    print("Hiding OneWorld Hub!")
+    spawnObjectData({
+        data = {
+            Name = "FogOfWarTrigger",
+            Transform = {
+                posX = pos.x,
+                posY = pos.y,
+                posZ = pos.z,
+                rotX = rot.x,
+                rotY = rot.y,
+                rotZ = rot.z,
+                scaleX = 12.00,
+                scaleY = 0.40,
+                scaleZ = 10.20
+            },
+            Nickname = "",
+            Description = "",
+            GMNotes = "",
+            ColorDiffuse = {
+                r = 0.25,
+                g = 0.25,
+                b = 0.25,
+                a = 0.1025644
+            },
+            LayoutGroupSortIndex = 0,
+            Value = 0,
+            Locked = true,
+            Grid = true,
+            Snap = true,
+            IgnoreFoW = false,
+            MeasureMovement = false,
+            DragSelectable = true,
+            Autoraise = true,
+            Sticky = true,
+            Tooltip = true,
+            GridProjection = false,
+            HideWhenFaceDown = false,
+            Hands = false,
+            FogColor = "Black",
+            FogHidePointers = true,
+            FogReverseHiding = false,
+            FogSeethrough = false,
+            LuaScript = "",
+            LuaScriptState = "",
+            XmlUI = ""
+        }
+    })
 end
 
 -- Handles clicks on the setup button
@@ -21,11 +131,23 @@ function buttonClick_spawnFOW()
     bounds.y = 20
     spawnObject({
         type = "FogOfWar",
-        position = {0, 10.85, 0},
+        position = {0, 100, 0},
         rotation = {0, 0, 0},
         scale = bounds,
-        sound = true
+        sound = true,
+        callback_function = function(spawned_object)
+            spawned_object.setPositionSmooth({0, 10.85, 0})
+        end
     });
+end
+
+function getOneWorldHub()
+    for _, obj in ipairs(getAllObjects()) do
+        if obj ~= self and obj ~= nil and obj.getName() == "OW_Hub" then
+            return obj
+        end
+    end
+    return nil
 end
 
 function getOneWorldMap()

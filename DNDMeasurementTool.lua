@@ -1,5 +1,5 @@
 className = "MeasurementTool"
-versionNumber = "2.5.5"
+versionNumber = "2.6.0"
 finishedLoading = false
 toggleMeasure = 0
 pickedUp = 0
@@ -27,6 +27,7 @@ end
 function onload(save_state)
 
     if save_state ~= "" then
+        -- ALRIGHTY, let's see which state data we need to use
         local saved_data = JSON.decode(save_state)
         if saved_data.alternateDiag ~= nil then
             alternateDiag = saved_data.alternateDiag
@@ -108,7 +109,7 @@ function createActiveInputs()
         label="Cal.",
         input_function="calibrationFunction",
         function_owner=self,
-        position = {1.75, 7.7, 0.8},
+        position = {0, 9.0, 0},
         rotation={-58,0,0},
         height=350,
         width=700,

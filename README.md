@@ -13,7 +13,7 @@
 # DND Mini Injector
 <img src="https://i.imgur.com/83uMYlZ.jpg" width="500">
 
-### Latest Version: 4.6.6
+### Latest Version: 4.6.8
 + **Injection.** 
   + Place a mini on the top of this panel to inject it, flip the panel over and place an injected mini on it to remove injection.
   + Removing injection does not remove saved settings for that mini.
@@ -23,7 +23,7 @@
   + Menu options shown in red are enabled, white are disabled.
   + Settings set for the minis are synced between states if the mini has multiple.
   + Injected UI has 3 bars for information in red/blue/yellow. Red is used for health, the other two can be used for whatever suits you. Click the **right** side of the bars to show/hide bar adjustment buttons. Bars for PC minis are visible to everyone, and global visibility for NPC minis is optional.
-  + Injected UI can be rotated and moved up/down to match your mini. There are 'UI Height UP' and 'UI Rotate 90' shortcuts in the right-click menu for quick adjustment, with fine adjustment available in the settings panel.
+  + Injected UI can be rotated and moved up/down to match your mini. There are 'UI Height UP', 'UI Height DOWN', and 'UI Rotate 90' shortcuts in the right-click menu for quick adjustment, with fine adjustment available in the settings panel.
   + Minis can be stabilized so that they don't fall over when set down.
   + PC minis are always visible through fog of war.
   + NPC minis can be hidden from players via the right click menu.
@@ -68,7 +68,7 @@
 # DND Measurement Tool
 <img src="https://i.imgur.com/ncy9Hfm.jpg" width="500">
 
-### Latest Version: 2.5.1
+### Latest Version: 2.6.0
 
 + Pick up an object then pick up the measurement tool to display distance.
 + Measurement uses DND rules in 5 foot increments with either normal or alternate diagonal style.
@@ -114,20 +114,23 @@
 + Dice and rolls are always visible, even inside hidden zones.
 
 # OneWorld Fog-Of-War Spawner
-### Latest Version: 2.0
+### Latest Version: 2.1.0
 
 + Click the button on top and it will spawn a fog-of-war zone and animate it into place.
 + The zone tracks the currently deployed OneWorld map and will perfectly cover it.
 + If OneWorld is not available/deployed it will use the default 'Custom Rectangle' table bounds.
++ Use 'Hide OW Minimaps' to hide the map objects that float above the table in the corner from your players.
++ Use 'Hide OW Hub' to hide the OneWorld hub from your players.
 
 # One World GridSaver Tokens
 <img src="https://i.imgur.com/7sVcizo.jpg" width="500">
 
-### Latest Version: 1.0
+### Latest Version: 2.0.0
 
-+ These GridSaver tokens allow you to save TTS grid size/offset with your OneWorld maps.
++ These GridSaver tokens allow you to save TTS grid settings with your OneWorld maps.
 + When you 'BUILD' the OneWorld map with a GridSaver in it, the grid state that was saved with the token will come back.
 + Injected miniatures will be automatically resized to match the new grid.
++ Use 'Enable Grid Proj.' to enable grid projection on the OneWorld table map.
 
 # OneWorld LineSaver Tokens
 ### Latest Version: 1.0.2

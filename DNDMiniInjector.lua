@@ -2,7 +2,7 @@
 -- Credit to HP Bar Writer by Kijan
 --[[LUAStart
 className = "MeasurementToken"
-versionNumber = "4.6.6"
+versionNumber = "4.6.8"
 scaleMultiplierX = 1.0
 scaleMultiplierY = 1.0
 scaleMultiplierZ = 1.0
@@ -293,6 +293,8 @@ function onLoad(save_state)
         loadStageTwo()
         coroutine.yield(0)
 
+        finishedLoading = true
+        self.setVar("finishedLoading", true)
         return 1
     end
     startLuaCoroutine(self, "onLoad_helper")
@@ -493,9 +495,6 @@ function loadStageTwo()
     updateSave()
 
     autoFogOfWarReveal()
-
-    finishedLoading = true
-    self.setVar("finishedLoading", true)
 end
 
 function onObjectSpawn(object)
@@ -617,6 +616,7 @@ end
 function rebuildContextMenu()
     self.clearContextMenu()
     self.addContextMenuItem("UI Height UP", uiHeightUp, true)
+    self.addContextMenuItem("UI Height DOWN", uiHeightDown, true)
     self.addContextMenuItem("UI Rotate 90", uiRotate90, true)
     if hideFromPlayers == true then
         self.addContextMenuItem("[X] Hide from players", toggleHideFromPlayers)
@@ -639,6 +639,12 @@ end
 
 function uiHeightUp()
     options.heightModifier = options.heightModifier + 50
+    self.UI.setAttribute("panel", "position", "0 0 -" .. options.heightModifier)
+    updateSave()
+end
+
+function uiHeightDown()
+    options.heightModifier = options.heightModifier - 50
     self.UI.setAttribute("panel", "position", "0 0 -" .. options.heightModifier)
     updateSave()
 end
@@ -1272,8 +1278,8 @@ end
 
 function showAllButtons()
     local foundTriggers = false
-    posi = -16
-    posiY = -2
+    posi = 16
+    posiY = 2
     counter = 0
     for k = 0, 99 do
         if triggerNames[k] ~= nil and triggerNames[k] ~= "Reset" then
@@ -1285,7 +1291,7 @@ function showAllButtons()
             button_parameters1.function_owner = self
             button_parameters1.label = triggerNames[k]
             button_parameters1.position = {posi, 4, posiY}
-            button_parameters1.rotation = {0, -90, 0}
+            button_parameters1.rotation = {0, 90, 0}
             button_parameters1.width = 2000
             button_parameters1.height = 400
             button_parameters1.font_size = 150
@@ -1297,21 +1303,21 @@ function showAllButtons()
 
             counter = counter + 1
             if counter < 16 then
-                posi = posi + 1
+                posi = posi - 1
 
                 if counter == 11 then
-                    if posiY == -21.5 then
-                        posiY = posiY - 6
-                        posi = -16
+                    if posiY == 21.5 then
+                        posiY = posiY + 6
+                        posi = 16
                         counter = 0
                     end
                 end
             else
-                posi = -16
-                if posiY == -2 then
-                    posiY = posiY - 6
+                posi = 16
+                if posiY == 2 then
+                    posiY = posiY + 6
                 else
-                    posiY = posiY - 4.5
+                    posiY = posiY + 4.5
                 end
                 counter = 0
             end
@@ -1538,7 +1544,7 @@ LUAStop--lua]]
 XMLStop--xml]]
 
 className = "MiniInjector"
-versionNumber = "4.6.6"
+versionNumber = "4.6.8"
 finishedLoading = false
 debuggingEnabled = false
 pingInitMinis = true
@@ -1818,6 +1824,10 @@ function onUpdate()
                     if objClassName == "MeasurementToken" then
                         tokenVersion = obj.getVar("versionNumber")
                         if versionNumber ~= tokenVersion then
+                            -- Wait for the mini to fully load before killing it
+                            if obj.getVar("finishedLoading") ~= true then
+                                return
+                            end
                             print("[00ff00]Updating[-] mini " .. updateEverythingIndex .. ".")
                             updateEverythingIndex = updateEverythingIndex + 1
                             injectToken(obj)
@@ -1841,7 +1851,19 @@ function onObjectSpawn(object)
         return
     end
     local dropWatch = function()
-        return object == nil or object.resting
+        if object == nil then
+            return true
+        end
+        if object.resting then
+            if object.getVar("className") ~= "MeasurementToken" then
+                return true
+            end
+            -- Wait for the mini to fully load before killing it
+            if object.getVar("finishedLoading") == true then
+                return true
+            end
+        end
+        return false
     end
     local dropFunc = function()
         if object == nil then
