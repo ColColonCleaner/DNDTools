@@ -2,7 +2,7 @@
 -- Credit to HP Bar Writer by Kijan
 --[[LUAStart
 className = "MeasurementToken"
-versionNumber = "4.6.9"
+versionNumber = "4.7.0"
 scaleMultiplierX = 1.0
 scaleMultiplierY = 1.0
 scaleMultiplierZ = 1.0
@@ -233,7 +233,9 @@ function onLoad(save_state)
                 saved_data.scale_multiplier_x = my_saved_data.scale_multiplier_x
                 saved_data.scale_multiplier_y = my_saved_data.scale_multiplier_y
                 saved_data.scale_multiplier_z = my_saved_data.scale_multiplier_z
-                options["heightModifier"] = my_saved_data.options["heightModifier"]
+                if my_saved_data.options ~= nil then
+                    options["heightModifier"] = my_saved_data.options["heightModifier"]
+                end
             end
             if saved_data.scale_multiplier_x ~= nil then
                 scaleMultiplierX = saved_data.scale_multiplier_x
@@ -1126,16 +1128,16 @@ function onClick(player_in, value, id)
         end
     elseif id == "subHeight" or id == "addHeight" then
         if id == "addHeight" then
-            options.heightModifier = options.heightModifier + options.incrementBy
+            options.heightModifier = options.heightModifier + getIncrement(value)
         else
-            options.heightModifier = options.heightModifier - options.incrementBy
+            options.heightModifier = options.heightModifier - getIncrement(value)
         end
         self.UI.setAttribute("panel", "position", "0 0 -" .. options.heightModifier)
     elseif id == "subRotation" or id == "addRotation" then
         if id == "addRotation" then
-            options.rotation = options.rotation + options.incrementBy
+            options.rotation = options.rotation + getIncrement(value)
         else
-            options.rotation = options.rotation - options.incrementBy
+            options.rotation = options.rotation - getIncrement(value)
         end
         self.UI.setAttribute("panel", "rotation", options.rotation .. " 270 90")
     elseif id == "HH" then
@@ -1222,35 +1224,35 @@ function onClick(player_in, value, id)
         statNames[id] = false
     else
         if id == "add" then
-            health.value = health.value + options.incrementBy
+            health.value = health.value + getIncrement(value)
         elseif id == "addS" then
-            mana.value = mana.value + options.incrementBy
+            mana.value = mana.value + getIncrement(value)
         elseif id == "addE" then
-            extra.value = extra.value + options.incrementBy
+            extra.value = extra.value + getIncrement(value)
         elseif id == "sub" then
-            health.value = health.value - options.incrementBy
+            health.value = health.value - getIncrement(value)
         elseif id == "subS" then
-            mana.value = mana.value - options.incrementBy
+            mana.value = mana.value - getIncrement(value)
         elseif id == "subE" then
-            extra.value = extra.value - options.incrementBy
+            extra.value = extra.value - getIncrement(value)
         elseif id == "addMax" then
-            health.value = health.value + options.incrementBy
-            health.max = health.max + options.incrementBy
+            health.value = health.value + getIncrement(value)
+            health.max = health.max + getIncrement(value)
         elseif id == "addMaxS" then
-            mana.value = mana.value + options.incrementBy
-            mana.max = mana.max + options.incrementBy
+            mana.value = mana.value + getIncrement(value)
+            mana.max = mana.max + getIncrement(value)
         elseif id == "addMaxE" then
-            extra.value = extra.value + options.incrementBy
-            extra.max = extra.max + options.incrementBy
+            extra.value = extra.value + getIncrement(value)
+            extra.max = extra.max + getIncrement(value)
         elseif id == "subMax" then
-            health.value = health.value - options.incrementBy
-            health.max = health.max - options.incrementBy
+            health.value = health.value - getIncrement(value)
+            health.max = health.max - getIncrement(value)
         elseif id == "subMaxS" then
-            mana.value = mana.value - options.incrementBy
-            mana.max = mana.max - options.incrementBy
+            mana.value = mana.value - getIncrement(value)
+            mana.max = mana.max - getIncrement(value)
         elseif id == "subMaxE" then
-            extra.value = extra.value - options.incrementBy
-            extra.max = extra.max - options.incrementBy
+            extra.value = extra.value - getIncrement(value)
+            extra.max = extra.max - getIncrement(value)
         end
         if health.value > health.max and not options.aboveMax then health.value = health.max end
         if health.value < 0 and not options.belowZero then health.value = 0 end
@@ -1276,6 +1278,14 @@ function onClick(player_in, value, id)
     self.UI.setAttribute("hpText", "textColor", "#FFFFFF")
     self.UI.setAttribute("manaText", "textColor", "#FFFFFF")
     updateSave()
+end
+
+function getIncrement(value)
+    if value == "-1" then
+        return options.incrementBy
+    else
+        return 10
+    end
 end
 
 function showAllButtons()
@@ -1546,10 +1556,11 @@ LUAStop--lua]]
 XMLStop--xml]]
 
 className = "MiniInjector"
-versionNumber = "4.6.9"
+versionNumber = "4.7.0"
 finishedLoading = false
 debuggingEnabled = false
 pingInitMinis = true
+autostartOneWorld = true
 initTableOnly = true
 hideUpsideDownMinis = true
 autoCalibrateEnabled = false
@@ -1587,6 +1598,7 @@ function onSave()
     local save_state = JSON.encode({
         debugging_enabled = debuggingEnabled,
         ping_init_minis = pingInitMinis,
+        autostart_oneworld = autostartOneWorld,
         init_table_only = initTableOnly,
         auto_calibrate_enabled = autoCalibrateEnabled,
         options = options,
@@ -1630,6 +1642,9 @@ function onLoad(save_state)
             if saved_data.ping_init_minis ~= nil then
                 pingInitMinis = saved_data.ping_init_minis
             end
+            if saved_data.autostart_oneworld ~= nil then
+                autostartOneWorld = saved_data.autostart_oneworld
+            end
             if saved_data.init_table_only ~= nil then
                 initTableOnly = saved_data.init_table_only
             end
@@ -1651,6 +1666,8 @@ function onLoad(save_state)
     addHotkey("Initiative Roll", rollInitiative, false)
 
     Wait.frames(updateSettingUI, 10)
+
+    Wait.frames(initOneWorld, 60)
 
     Wait.frames(updateEverything, 120)
 end
@@ -1674,13 +1691,17 @@ function updateSettingUI()
     end
 end
 
+function initOneWorld()
+    if autostartOneWorld then
+        local owHub = getOneWorldHub()
+        if owHub ~= nil and owHub.getVar("iu") ~= nil then
+            owHub.call("chkIUnit")
+        end
+    end
+end
+
 function rebuildContextMenu()
     self.clearContextMenu()
-    if (debuggingEnabled) then
-        self.addContextMenuItem("[X] Debugging", toggleDebug)
-    else
-        self.addContextMenuItem("[ ] Debugging", toggleDebug)
-    end
     if (pingInitMinis) then
         self.addContextMenuItem("[X] Ping Init Minis", togglePingInitMinis)
     else
@@ -1696,12 +1717,26 @@ function rebuildContextMenu()
     else
         self.addContextMenuItem("[ ] Auto-Calibrate", toggleAutoCalibrate)
     end
-    self.addContextMenuItem("Update All Minis", updateEverything)
+    if (autostartOneWorld) then
+        self.addContextMenuItem("[X] Auto-OneWorld", toggleAutostartOneWorld)
+    else
+        self.addContextMenuItem("[ ] Auto-OneWorld", toggleAutostartOneWorld)
+    end
     self.addContextMenuItem("Inject EVERYTHING", injectEverything)
+    if (debuggingEnabled) then
+        self.addContextMenuItem("[X] Debugging", toggleDebug)
+    else
+        self.addContextMenuItem("[ ] Debugging", toggleDebug)
+    end
 end
 
 function toggleDebug()
     debuggingEnabled = not debuggingEnabled
+    rebuildContextMenu()
+end
+
+function toggleAutostartOneWorld()
+    autostartOneWorld = not autostartOneWorld
     rebuildContextMenu()
 end
 
@@ -1776,6 +1811,8 @@ function onUpdate()
                                 print("[ff0000]Removing[-] injection from " .. object.getName() .. ".")
                             end
                             object.call("destroyMoveToken")
+                            object.script_state = ""
+                            object.script_code = ""
                             object.setLuaScript("")
                             object.reload()
                             break
@@ -2066,6 +2103,15 @@ function injectToken(object)
     newScript = newScript:gsub('<Panel id="panel" position="0 0 -220"', '<Panel id="panel" position="0 0 ' .. object.getBounds().size.y / object.getScale().y * 110 .. '"')
     object.setLuaScript(newScript)
     object.reload()
+end
+
+function getOneWorldHub()
+    for _, obj in ipairs(getAllObjects()) do
+        if obj ~= self and obj ~= nil and obj.getName() == "OW_Hub" then
+            return obj
+        end
+    end
+    return nil
 end
 
 function getOneWorldMap()
@@ -2648,11 +2694,12 @@ function rebuildUI()
                         {
                             tag='Button',
                             attributes={
+                                id=figure.guidValue ..'_barReduce',
                                 preferredWidth='30',
                                 preferredHeight='60',
                                 flexibleWidth=0,
                                 image='ui_arrow_l2',
-                                onClick='barReduce('..figure.guidValue ..')'
+                                onClick='barReduce'
                             }
                         },
                         {
@@ -2678,11 +2725,12 @@ function rebuildUI()
                         {
                             tag='Button',
                             attributes={
+                                id=figure.guidValue ..'_barIncrease',
                                 preferredWidth='30',
                                 preferredHeight='60',
                                 image='ui_arrow_r2',
                                 flexibleWidth=0,
-                                onClick='barIncrease('..figure.guidValue ..')'
+                                onClick='barIncrease'
                             }
                         },
                         {
@@ -2810,17 +2858,27 @@ function barChangeMaximum(player, value, id)
     end
 end
 
-function barReduce(player, guid)
+function barReduce(player, value, id)
+    local guid = id:sub(1, -11)
     local token = getObjectFromGUID(guid)
-    if (token ~= nil) then
-        token.call('reduceHP')
+    if token ~= nil then
+        if value == "-1" then
+            token.call('reduceHP')
+        else
+            token.call('adjustHP', -10)
+        end
     end
 end
 
-function barIncrease(player, guid)
+function barIncrease(player, value, id)
+    local guid = id:sub(1, -13)
     local token = getObjectFromGUID(guid)
-    if (token ~= nil) then
-        token.call('increaseHP')
+    if token ~= nil then
+        if value == "-1" then
+            token.call('increaseHP')
+        else
+            token.call('adjustHP', 10)
+        end
     end
 end
 

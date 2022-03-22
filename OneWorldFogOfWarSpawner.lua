@@ -127,16 +127,17 @@ end
 
 -- Handles clicks on the setup button
 function buttonClick_spawnFOW()
-    local bounds = getMapBounds(true)
-    bounds.y = 20
+    local vars = getMapVars(true)
+    local thickness = vars.bounds.y
+    vars.bounds.y = 20
     spawnObject({
         type = "FogOfWar",
-        position = {0, 100, 0},
+        position = {vars.position.x, 100, vars.position.z},
         rotation = {0, 0, 0},
-        scale = bounds,
+        scale = vars.bounds,
         sound = true,
         callback_function = function(spawned_object)
-            spawned_object.setPositionSmooth({0, 10.85, 0})
+            spawned_object.setPositionSmooth({vars.position.x, vars.position.y + (thickness/2.0) + 9.88, vars.position.z})
         end
     });
 end
@@ -159,22 +160,28 @@ function getOneWorldMap()
     return nil
 end
 
-function getMapBounds(debug)
-    local defaultBounds = {x = 88.07, y = 1, z = 52.02}
+function getMapVars(debug)
+    local defaultVars = {
+        position = {x = 0.0, y = 0.91, z = 0.0},
+        bounds = {x = 88.07, y = 0.2, z = 52.02}
+    }
     local oneWorldMap = getOneWorldMap()
     if oneWorldMap ~= nil then
         local oneWorldBounds = oneWorldMap.getBounds();
         if oneWorldBounds.size.x > 10 then
             print("Using OneWorld map bounds.")
-            return oneWorldBounds.size
+            return {
+                position = oneWorldMap.getPosition(),
+                bounds = oneWorldBounds.size
+            }
         end
         if debug then
             print("A OneWorld map is not deployed! Using default bounds.")
         end
-        return defaultBounds
+        return defaultVars
     end
     if debug then
         print("OneWorld is not available! Using default bounds.")
     end
-    return defaultBounds
+    return defaultVars
 end

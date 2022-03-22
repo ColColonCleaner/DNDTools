@@ -1,5 +1,5 @@
 className = "OneWorldGridSaver";
-versionNumber = "2.0.0";
+versionNumber = "2.1.0";
 savedGridState = false;
 gridStateData = nil;
 finishedLoading = false;
@@ -38,7 +38,12 @@ function rebuildContextMenu()
     else
         self.addContextMenuItem("[ ] Save Grid State", saveGridState);
     end
+    self.addContextMenuItem("Toggle Grid", toggleGridVisibility)
     self.addContextMenuItem("Enable Grid Proj.", enableGridProjection);
+end
+
+function toggleGridVisibility()
+    Grid.show_lines = not Grid.show_lines
 end
 
 function enableGridProjection()

@@ -1,5 +1,5 @@
 className = "MeasurementTool"
-versionNumber = "2.6.0"
+versionNumber = "2.7.0"
 finishedLoading = false
 toggleMeasure = 0
 pickedUp = 0
@@ -10,6 +10,7 @@ rotationVector = vector(0, 0, 0)
 positionVector = vector(0, 0, 0)
 inputsActive = false
 enableCalibration = false
+vertexMode = false
 alternateDiag = false
 finalDistance = 1
 
@@ -19,6 +20,7 @@ savedEndPoint = nil
 function onSave()
     local save_state = JSON.encode({
         enableCalibration = enableCalibration,
+        vertexMode = vertexMode,
         alternateDiag = alternateDiag
     })
     return save_state
@@ -34,6 +36,9 @@ function onload(save_state)
         end
         if saved_data.enableCalibration ~= nil then
             enableCalibration = saved_data.enableCalibration
+        end
+        if saved_data.vertexMode ~= nil then
+            vertexMode = saved_data.vertexMode
         end
     end
 
@@ -77,6 +82,11 @@ function rebuildContextMenu()
     self.clearContextMenu()
     if enableCalibration == true then
         self.addContextMenuItem("[X] Calibration", toggleEnableCalibration)
+        if vertexMode == true then
+            self.addContextMenuItem("[X] Vertex Mode", toggleEnableVertexMode)
+        else
+            self.addContextMenuItem("[ ] Vertex Mode", toggleEnableVertexMode)
+        end
     else
         self.addContextMenuItem("[ ] Calibration", toggleEnableCalibration)
     end
@@ -85,6 +95,16 @@ function rebuildContextMenu()
     else
         self.addContextMenuItem("[ ] Alt. Diagonals", toggleAlternateDiag)
     end
+    self.addContextMenuItem("Toggle Grid", toggleGridVisibility)
+end
+
+function toggleGridVisibility()
+    Grid.show_lines = not Grid.show_lines
+end
+
+function toggleEnableVertexMode()
+    vertexMode = not vertexMode
+    rebuildContextMenu()
 end
 
 function toggleEnableCalibration()
@@ -312,8 +332,12 @@ function calibrationFunction(obj, player_clicker_color, input_value, selected)
 
         Grid.sizeX = gridSize
         Grid.sizeY = gridSize
-        Grid.offsetX = pointA[1] - (gridSize / 2.0)
-        Grid.offsetY = pointA[3] - (gridSize / 2.0)
+        displacement = (gridSize / 2.0)
+        if vertexMode then
+            displacement = 0
+        end
+        Grid.offsetX = pointA[1] - displacement
+        Grid.offsetY = pointA[3] - displacement
         resetScales()
     end
 end

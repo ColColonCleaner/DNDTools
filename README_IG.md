@@ -10,7 +10,7 @@
 ### Full table with all these tools available [HERE](https://steamcommunity.com/sharedfiles/filedetails/?id=2455649013)
 
 # DND Mini Injector
-### Latest Version: 4.6.9
+### Latest Version: 4.7.0
 + **Injection.** 
   + Place a mini on the top of this panel to inject it, flip the panel over and place an injected mini on it to remove injection.
   + Removing injection does not remove saved settings for that mini.
@@ -24,6 +24,7 @@
   + Minis can be stabilized so that they don't fall over when set down.
   + PC minis are always visible through fog of war.
   + NPC minis can be hidden from players via the right click menu.
+  + If OneWorld is available on the table it will be automatically initialized shortly after the mini injector loads. This can be disabled in the right-click menu by turning off 'Auto-OneWorld'.
 + **Movement.**
   + When an injected mini is picked up a token 1 square wide will spawn underneath facing the player. That token shows distance with DND rules in 5 foot increments.
   + All distances in these tools are with reference to the TTS square grid. Modifying that grid will affect the calculated distances.
@@ -62,16 +63,16 @@
 + Clicking the floating status button removes the status.
 
 # DND Measurement Tool
-### Latest Version: 2.6.0
+### Latest Version: 2.7.0
 
 + Pick up an object then pick up the measurement tool to display distance.
 + Measurement uses DND rules in 5 foot increments with either normal or alternate diagonal style.
++ It can calibrate the table's grid. Enable calibration in the right-click menu then set up a measurement. Enter how many feet the distance should be in that field and click away from it. Vertex mode will enable calibration between grid line intersections rather than grid square centers.
 + The tool will always face the player using it while it's active.
 + Color of the line is the color of the tool.
 + While the tool is active it will stay in place when dropped, even if off the table.
-+ It can calibrate the table's grid. Enable calibration in the right-click menu then set up a measurement. Enter how many feet the distance should be in that field and click away from it.
 + With alternate diagonal style enabled the calibration field only displays with fully vertical or horizontal measurements.
-+ **Remember you can toggle displaying TTS grid lines in the options menu.**
++ **Remember you can toggle displaying TTS grid lines in the options menu, or in the measurement tool's right-click menu.**
 
 # Wall Spawner
 ### Latest Version: 1.7
@@ -102,8 +103,15 @@
 + Roll results are displayed in order added to the tower.
 + Dice and rolls are always visible, even inside hidden zones.
 
+# Auto-Scale Injector
+### Latest Version: 1.0.0
+
++ Place an object on the injector to lock its scale with reference to the TTS grid.
++ Flip the injector over and place an injected object onto it to remove the injection.
++ Injected objects are automatically stabilized so they don't fall over.
+
 # OneWorld Fog-Of-War Spawner
-### Latest Version: 2.1.0
+### Latest Version: 2.2.0
 
 + Click the button on top and it will spawn a fog-of-war zone and animate it into place.
 + The zone tracks the currently deployed OneWorld map and will perfectly cover it.
@@ -112,23 +120,26 @@
 + Use 'Hide OW Hub' to hide the OneWorld hub from your players.
 
 # OneWorld GridSaver Tokens
-### Latest Version: 2.0.0
+### Latest Version: 2.1.0
 
 + These GridSaver tokens allow you to save TTS grid size/offset with your OneWorld maps.
 + When you 'BUILD' the OneWorld map with a GridSaver in it, the grid state that was saved with the token will come back.
 + Injected miniatures will be automatically resized to match the new grid.
 + Use 'Enable Grid Proj.' to enable grid projection on the OneWorld table map.
++ All variables for the grid are saved/reloaded. Enabled, color, transparancy, size, offset, etc.
 
 # OneWorld LineSaver Tokens
-### Latest Version: 1.0.2
+### Latest Version: 2.0.0
 
 + These LineSaver tokens allow you to save lines/drawings with your OneWorld maps.
++ It will save all global drawn lines in the main map zone of the table. The area covered by the current OneWorld map, or the default 'Custom Rectangle' zone if OneWorld is not available.
 + Instructions are provided on the tokens themselves.
 
 # 5e Fallout Armor Calculator
 
 + Running a campain in the world of New Vegas at the moment.
 + The conversion 5e Fallout uses a custom armor system. This calculator automates that.
++ [Wiki for 5e Fallout](http://5efallout.wikidot.com/)
 + Power armor is not included yet.
 
  **Code credit to the following workshops; their work has been built on for these tools:** 
