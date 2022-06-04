@@ -1,8 +1,334 @@
 -- DNDMiniInjector
 -- Credit to HP Bar Writer by Kijan
 --[[LUAStart
-className = "MeasurementToken"
-versionNumber = "4.7.0"
+--[[LUAMoveStart
+move_const_gridTargetScale = 0.3
+move_const_sectionMultiplier = 5
+move_const_sectionMultiplier_metric = 1.5
+move_startLocation = nil
+move_currentLocation = nil
+move_currentAdjacentLocations = nil
+move_allLocations = {}
+move_drawLocations = {}
+move_lastTargetLoc = nil
+move_numDiagonals = 0
+
+function getDistance()
+    local multiplier = move_const_sectionMultiplier
+    if metricMode == true then
+        multiplier = move_const_sectionMultiplier_metric
+    end
+    local totalDistance = (#move_allLocations - 1) * multiplier
+    if alternateDiag == true then
+        totalDistance = totalDistance + (math.floor(move_numDiagonals / 2.0) * multiplier)
+    end
+    return totalDistance
+end
+
+function resetMoves()
+    move_allLocations = {}
+    move_drawLocations = {}
+    move_numDiagonals = 0
+    updateCurrentLocation(move_startLocation)
+end
+
+function getTargetColor()
+    local player = move_targetObject.getVar("player")
+    local colorTint = move_targetObject.getColorTint()
+    if player == true then
+        local miniHighlight = move_targetObject.getVar("miniHighlight")
+        if miniHighlight == "highlightWhite" then
+            colorTint = Color.White
+        elseif miniHighlight == "highlightBrown" then
+            colorTint = Color.Brown
+        elseif miniHighlight == "highlightRed" then
+            colorTint = Color.Red
+        elseif miniHighlight == "highlightOrange" then
+            colorTint = Color.Orange
+        elseif miniHighlight == "highlightYellow" then
+            colorTint = Color.Yellow
+        elseif miniHighlight == "highlightGreen" then
+            colorTint = Color.Green
+        elseif miniHighlight == "highlightTeal" then
+            colorTint = Color.Teal
+        elseif miniHighlight == "highlightBlue" then
+            colorTint = Color.Blue
+        elseif miniHighlight == "highlightPurple" then
+            colorTint = Color.Purple
+        elseif miniHighlight == "highlightPink" then
+            colorTint = Color.Pink
+        elseif miniHighlight == "highlightBlack" then
+            colorTint = Color.Black
+        end
+    else
+        colorTint = Color.White
+    end
+    return colorTint
+end
+
+function updateCurrentLocation(newLocation)
+    -- find Y of the floor directly below the mini's center point at the target location
+    -- use that as the new location
+
+    newLocation = Vector(newLocation.x, move_targetObject.getBounds().center.y, newLocation.z)
+    local hitList = Physics.cast({
+        origin       = newLocation,
+        direction    = {0,-1,0},
+        type         = 1,
+        max_distance = 10,
+        debug        = false,
+    })
+    for _, hitTable in ipairs(hitList) do
+        -- Find the first object directly below the mini
+        if hitTable ~= nil and hitTable.point ~= nil and hitTable.hit_object ~= mtoken then
+            newLocation = hitTable.point
+            newLocation.y = newLocation.y + 0.2
+            break
+        else
+            if debuggingEnabled == true then
+                print("Did not find object below mini.")
+            end
+        end
+    end
+    -- Ensure the first point starts below the move token
+    if #move_allLocations < 1 then
+        newLocation.y = self.getPosition().y
+    end
+    table.insert(move_allLocations, newLocation)
+    table.insert(move_drawLocations, self.positionToLocal(newLocation))
+    move_currentAdjacentLocations = getAdjacentLocations(newLocation.x, newLocation.z)
+    --pingAdjacents()
+    move_currentLocation = newLocation
+    --print(newLocation)
+    if #move_drawLocations > 1 then
+        self.setVectorLines({{
+            points = move_drawLocations,
+            color = getTargetColor()
+        }})
+    else
+        self.setVectorLines({})
+    end
+    if #self.getButtons() > 0 then
+        self.editButton({index = 0, label = tostring(getDistance())})
+    end
+end
+
+function pingAdjacents()
+    for _, player in ipairs(Player.getPlayers()) do
+        for i,point in ipairs(move_currentAdjacentLocations) do
+            local pinger = Vector(point.x, self.getPosition().y, point.y)
+            --print(pinger)
+            player.pingTable(pinger)
+        end
+        break
+    end
+end
+
+function onUpdate()
+    if move_startLocation == nil then
+        move_startLocation = self.getPosition()
+        local fontSize = 600
+        if metricMode then
+            fontSize = 500
+        end
+        self.createButton({
+            click_function = "onLoad",
+            function_owner = self,
+            label = "00",
+            position = {x=0, y=0.1, z=0},
+            width = 0,
+            height = 0,
+            font_size = fontSize
+        })
+        local gd = getGridDims()
+        if gd.width < gd.height then
+            self.setScale({
+                x= gd.width / 2.2,
+                y= 0.2,
+                z= gd.width / 2.2
+            })
+        else
+            self.setScale({
+                x= gd.height / 2.2,
+                y= 0.2,
+                z= gd.height / 2.2
+            })
+        end
+        updateCurrentLocation(move_startLocation)
+    end
+    if move_targetObject == nil or move_targetObject.held_by_color == nil then
+        destroyObject(self)
+        return
+    end
+    local targetLoc = move_targetObject.getPosition()
+    if move_lastTargetLoc ~= nil and targetLoc:distance(move_lastTargetLoc) < 0.05 then
+        --print("nomove")
+        return
+    end
+    local targetSameHeight = targetLoc.set
+    local acceptDistance = getAcceptDistance()
+    if #move_allLocations > 1 and
+       math.abs(targetLoc.x - move_startLocation.x) < acceptDistance
+       and math.abs(targetLoc.z - move_startLocation.z) < acceptDistance then
+        resetMoves()
+    end
+    -- the target has moved, see if it's nearby an adjacent location
+    for i,point in ipairs(move_currentAdjacentLocations) do
+        local testPoint = Vector(point.x, targetLoc.y, point.y)
+        if testPoint:distance(targetLoc) < acceptDistance then
+            if point.isDiagonal == true then
+                move_numDiagonals = move_numDiagonals + 1
+                --print("diagonals: " .. move_numDiagonals)
+            end
+            updateCurrentLocation(testPoint)
+        end
+    end
+    move_lastTargetLoc = targetLoc
+end
+
+function getAcceptDistance()
+    local gd = getGridDims()
+    if gd.width < gd.height then
+        return move_const_gridTargetScale * gd.width
+    else
+        return move_const_gridTargetScale * gd.height
+    end
+end
+
+function getGridDims()
+    if Grid.type == 1 then
+        return {
+            width = Grid.sizeX,
+            height = Grid.sizeY
+        }
+    elseif Grid.type == 2 then
+        return {
+            width = Grid.sizeX * 0.75,
+            height = Grid.sizeY * math.sqrt(3) / 2.0
+        }
+    elseif Grid.type == 3 then
+        return {
+            width = Grid.sizeX * math.sqrt(3) / 2.0,
+            height = Grid.sizeY * 0.75
+        }
+    end
+    print("INVALID GRID FORMAT")
+    return nil
+end
+
+function getAdjacentLocations(currentX, currentY)
+    local gd = getGridDims()
+    local adjacents = {}
+    if Grid.type == 1 then
+        table.insert(adjacents, {
+            x = currentX,
+            y = currentY + gd.height,
+            isDiagonal = false
+        })
+        table.insert(adjacents, {
+            x = currentX + gd.width,
+            y = currentY + gd.height,
+            isDiagonal = true
+        })
+        table.insert(adjacents, {
+            x = currentX + gd.width,
+            y = currentY,
+            isDiagonal = false
+        })
+        table.insert(adjacents, {
+            x = currentX + gd.width,
+            y = currentY - gd.height,
+            isDiagonal = true
+        })
+        table.insert(adjacents, {
+            x = currentX,
+            y = currentY - gd.height,
+            isDiagonal = false
+        })
+        table.insert(adjacents, {
+            x = currentX - gd.width,
+            y = currentY - gd.height,
+            isDiagonal = true
+        })
+        table.insert(adjacents, {
+            x = currentX - gd.width,
+            y = currentY,
+            isDiagonal = false
+        })
+        table.insert(adjacents, {
+            x = currentX - gd.width,
+            y = currentY + gd.height,
+            isDiagonal = true
+        })
+    elseif Grid.type == 2 then
+        table.insert(adjacents, {
+            x = currentX,
+            y = currentY + gd.height,
+            isDiagonal = false
+        })
+        table.insert(adjacents, {
+            x = currentX + gd.width,
+            y = currentY + (gd.height / 2.0),
+            isDiagonal = false
+        })
+        table.insert(adjacents, {
+            x = currentX + gd.width,
+            y = currentY - (gd.height / 2.0),
+            isDiagonal = false
+        })
+        table.insert(adjacents, {
+            x = currentX,
+            y = currentY - gd.height,
+            isDiagonal = false
+        })
+        table.insert(adjacents, {
+            x = currentX - gd.width,
+            y = currentY - (gd.height / 2.0),
+            isDiagonal = false
+        })
+        table.insert(adjacents, {
+            x = currentX - gd.width,
+            y = currentY + (gd.height / 2.0),
+            isDiagonal = false
+        })
+    elseif Grid.type == 3 then
+        table.insert(adjacents, {
+            x = currentX + (gd.width / 2.0),
+            y = currentY + gd.height,
+            isDiagonal = false
+        })
+        table.insert(adjacents, {
+            x = currentX + gd.width,
+            y = currentY,
+            isDiagonal = false
+        })
+        table.insert(adjacents, {
+            x = currentX + (gd.width / 2.0),
+            y = currentY - gd.height,
+            isDiagonal = false
+        })
+        table.insert(adjacents, {
+            x = currentX - (gd.width / 2.0),
+            y = currentY - gd.height,
+            isDiagonal = false
+        })
+        table.insert(adjacents, {
+            x = currentX - gd.width,
+            y = currentY,
+            isDiagonal = false
+        })
+        table.insert(adjacents, {
+            x = currentX - (gd.width / 2.0),
+            y = currentY + gd.height,
+            isDiagonal = false
+        })
+    end
+    return adjacents
+end
+LUAMoveStop--lua]]
+--[[LUACommentRemove
+className = "DNDMiniInjector_Mini"
+versionNumber = "4.7.6"
 scaleMultiplierX = 1.0
 scaleMultiplierY = 1.0
 scaleMultiplierZ = 1.0
@@ -27,6 +353,7 @@ extra = {value = 10, max = 10}
 player = false
 measureMove = false
 alternateDiag = false
+metricMode = false
 stabilizeOnDrop = false
 miniHighlight = "highlightNone"
 highlightToggle = true
@@ -146,6 +473,7 @@ function updateSaveActual()
         player = player,
         measureMove = measureMove,
         alternateDiag = alternateDiag,
+        metricMode = metricMode,
         stabilizeOnDrop = stabilizeOnDrop,
         miniHighlight = miniHighlight,
         highlightToggle = highlightToggle,
@@ -154,7 +482,6 @@ function updateSaveActual()
     })
     return 1
 end
-
 
 function onLoad(save_state)
 
@@ -258,6 +585,9 @@ function onLoad(save_state)
             if saved_data.alternateDiag ~= nil then
                 alternateDiag = saved_data.alternateDiag
             end
+            if saved_data.metricMode ~= nil then
+                metricMode = saved_data.metricMode
+            end
             if saved_data.stabilizeOnDrop ~= nil then
                 stabilizeOnDrop = saved_data.stabilizeOnDrop
             end
@@ -280,10 +610,11 @@ function onLoad(save_state)
                 end
             end
         end
-        self.setVar("className", "MeasurementToken")
+        self.setVar("className", "DNDMiniInjector_Mini")
         self.setVar("player", player)
         self.setVar("measureMove", measureMove)
         self.setVar("alternateDiag", alternateDiag)
+        self.setVar("metricMode", metricMode)
         self.setVar("stabilizeOnDrop", stabilizeOnDrop)
         self.setVar("miniHighlight", miniHighlight)
         self.setVar("highlightToggle", highlightToggle)
@@ -364,6 +695,7 @@ function loadStageTwo()
     self.UI.setAttribute("PlayerCharToggle", "textColor", player == true and "#AA2222" or "#FFFFFF")
     self.UI.setAttribute("MeasureMoveToggle", "textColor", measureMove == true and "#AA2222" or "#FFFFFF")
     self.UI.setAttribute("AlternateDiagToggle", "textColor", alternateDiag == true and "#AA2222" or "#FFFFFF")
+    self.UI.setAttribute("MetricModeToggle", "textColor", metricMode == true and "#AA2222" or "#FFFFFF")
     self.UI.setAttribute("StabilizeToggle", "textColor", stabilizeOnDrop == true and "#AA2222" or "#FFFFFF")
     self.UI.setAttribute("HH", "textColor", options.hideHp == true and "#AA2222" or "#FFFFFF")
     self.UI.setAttribute("HM", "textColor", options.hideMana == true and "#AA2222" or "#FFFFFF")
@@ -391,6 +723,8 @@ function loadStageTwo()
                 local injOptions = obj.getTable("options")
                 alternateDiag = injOptions.alternateDiag
                 self.UI.setAttribute("AlternateDiagToggle", "textColor", alternateDiag == true and "#AA2222" or "#FFFFFF")
+                metricMode = injOptions.metricMode
+                self.UI.setAttribute("MetricModeToggle", "textColor", metricMode == true and "#AA2222" or "#FFFFFF")
                 coroutine.yield(0)
                 if player == true then
                     self.UI.setAttribute("progressBar", "visibility", "")
@@ -773,6 +1107,32 @@ function toggleAlternateDiag(thePlayer1)
     Wait.frames(function() tad_Helper(myPlayer) end, 30)
 end
 
+function toggleMetricMode(thePlayer1)
+    local myPlayer = thePlayer1
+    local function tmm_Helper(thePlayer2)
+        -- Look for the mini injector, if available
+        local allObjects = getAllObjects()
+        for _, obj in ipairs(allObjects) do
+            if obj ~= self and obj ~= nil then
+                local typeCheck = obj.getVar("className")
+                if typeCheck == "MiniInjector" then
+                    local injOptions = obj.getTable("options")
+                    metricMode = injOptions.metricMode
+                    self.UI.setAttribute("MetricModeToggle", "textColor", metricMode == true and "#AA2222" or "#FFFFFF")
+                    if thePlayer2 ~= nil then
+                        broadcastToAll("Injector is present. Use the injector to toggle metric mode.", thePlayer2.color)
+                    end
+                    updateSave()
+                    return
+                end
+            end
+        end
+        metricMode = not metricMode
+        self.UI.setAttribute("MetricModeToggle", "textColor", metricMode == true and "#AA2222" or "#FFFFFF")
+        updateSave()
+    end
+    Wait.frames(function() tmm_Helper(myPlayer) end, 30)
+end
 
 function toggleStabilizeOnDrop()
     stabilizeOnDrop = not stabilizeOnDrop
@@ -915,7 +1275,7 @@ function createMoveToken(mcolor, mtoken)
     end
     tokenRot = Player[mcolor].getPointerRotation()
     movetokenparams = {
-        image = "http://cloud-3.steamusercontent.com/ugc/1021697601906583980/C63D67188FAD8B02F1B58E17C7B1DB304B7ECBE3/",
+        image = "http://cloud-3.steamusercontent.com/ugc/1868444108696929152/648A17F99D67FE9DDEBDED3A83E6E8B72A9ACCDB/",
         thickness = 0.1,
         type = 2
     }
@@ -954,58 +1314,16 @@ function createMoveToken(mcolor, mtoken)
     moveToken.setLock(true)
     moveToken.setCustomObject(movetokenparams)
     mtoken.setVar("myMoveToken", moveToken)
-    moveToken.setVar("measuredObject", mtoken)
+    moveToken.setVar("move_targetObject", mtoken)
     moveToken.setVar("myPlayer", mcolor)
     moveToken.setVar("alternateDiag", alternateDiag)
-    moveToken.setVar("className", "MeasurementToken_Move")
+    moveToken.setVar("metricMode", metricMode)
+    moveToken.setVar("className", "DNDMiniInjector_Mini_Move")
     moveToken.ignore_fog_of_war = player
     moveToken.interactable = false
-    moveButtonParams = {
-        click_function = "onLoad",
-        function_owner = self,
-        label = "00",
-        position = {x=0, y=0.1, z=0},
-        width = 0,
-        height = 0,
-        font_size = 600
-    }
-
-    moveButton = moveToken.createButton(moveButtonParams)
-    moveToken.setLuaScript("    function onUpdate() " ..
-                           "        local finalDistance = 0 " ..
-                           "        local mypos = self.getPosition() " ..
-                           "        if measuredObject == nil or measuredObject.held_by_color == nil then " ..
-                           "            destroyObject(self) " ..
-                           "            return " ..
-                           "        end " ..
-                           "        local opos = measuredObject.getPosition() " ..
-                           "        local oheld = measuredObject.held_by_color " ..
-                           "        opos.y = opos.y-(Player[myPlayer].lift_height*5) " ..
-                           "        mdiff = mypos - opos " ..
-                           "        if oheld then " ..
-                           "            if alternateDiag then " ..
-                           "                mDistance = math.abs(mdiff.x) " ..
-                           "                xDisGrid = math.floor(mDistance / Grid.sizeX + 0.5) " ..
-                           "                zDistance = math.abs(mdiff.z) " ..
-                           "                yDisGrid = math.floor(zDistance / Grid.sizeY + 0.5) " ..
-                           "                if xDisGrid > yDisGrid then " ..
-                           "                    finalDistance = math.floor(xDisGrid + yDisGrid/2.0) * 5.0 " ..
-                           "                else" ..
-                           "                    finalDistance = math.floor(yDisGrid + xDisGrid/2.0) * 5.0 " ..
-                           "                end " ..
-                           "            else " ..
-                           "                mDistance = math.abs(mdiff.x) " ..
-                           "                zDistance = math.abs(mdiff.z) " ..
-                           "                if zDistance > mDistance then " ..
-                           "                    mDistance = zDistance " ..
-                           "                end " ..
-                           "                mDistance = mDistance * (5.0 / Grid.sizeX) " ..
-                           "                finalDistance = (math.floor((mDistance + 2.5) / 5.0) * 5) " ..
-                           "            end " ..
-                           "            self.editButton({index = 0, label = tostring(finalDistance)}) " ..
-                           "        end " ..
-                           "    end ")
-
+    local script = self.getLuaScript()
+    local newScript = script:sub(script:find("LUAMoveStart")+12, script:find("LUAMoveStop")-1)
+    moveToken.setLuaScript(newScript)
 end
 
 function reduceHP()
@@ -1458,8 +1776,8 @@ LUAStop--lua]]
             </Panel>
         </Panel>
     </VerticalLayout>
-    <Panel id="editPanel" height="1520" width="800" color="#330000FF" position="0 1240 0" active="False">
-        <ProgressBar id="blackBackground" visibility="" height="1520" width="800" showPercentageText="false" color="#330000FF" percentage="100" fillImageColor="#330000FF" position="0 -320 0"></ProgressBar>
+    <Panel id="editPanel" height="1620" width="800" color="#330000FF" position="0 1290 0" active="False">
+        <ProgressBar id="blackBackground" visibility="" height="1620" width="800" showPercentageText="false" color="#330000FF" percentage="100" fillImageColor="#330000FF" position="0 -320 0"></ProgressBar>
         <HorizontalLayout>
             <VerticalLayout>
                 <HorizontalLayout spacing="10" minheight="100">
@@ -1478,6 +1796,9 @@ LUAStop--lua]]
                 <HorizontalLayout minheight="160">
                     <Button id="MeasureMoveToggle" onClick="toggleMeasure" fontSize="70" text="Measure Moves" color="#000000FF"></Button>
                     <Button id="AlternateDiagToggle" onClick="toggleAlternateDiag" fontSize="60" text="Alternate Diagonals" color="#000000FF"></Button>
+                </HorizontalLayout>
+                <HorizontalLayout minheight="100">
+                    <Button id="MetricModeToggle" onClick="toggleMetricMode" fontSize="70" text="Metric Mode" color="#000000FF"></Button>
                 </HorizontalLayout>
                 <HorizontalLayout minheight="160">
                     <Button id="StabilizeToggle" onClick="toggleStabilizeOnDrop" fontSize="70" text="Stable Mini" color="#000000FF"></Button>
@@ -1556,7 +1877,7 @@ LUAStop--lua]]
 XMLStop--xml]]
 
 className = "MiniInjector"
-versionNumber = "4.7.0"
+versionNumber = "4.7.6"
 finishedLoading = false
 debuggingEnabled = false
 pingInitMinis = true
@@ -1581,6 +1902,7 @@ options = {
     showAll = true,
     measureMove = false,
     alternateDiag = false,
+    metricMode = false,
     playerChar = false,
     HP2Desc = false,
     hp = 10,
@@ -1722,6 +2044,11 @@ function rebuildContextMenu()
     else
         self.addContextMenuItem("[ ] Auto-OneWorld", toggleAutostartOneWorld)
     end
+    if (options.metricMode) then
+        self.addContextMenuItem("[X] Metric Mode", toggleMetricMode)
+    else
+        self.addContextMenuItem("[ ] Metric Mode", toggleMetricMode)
+    end
     self.addContextMenuItem("Inject EVERYTHING", injectEverything)
     if (debuggingEnabled) then
         self.addContextMenuItem("[X] Debugging", toggleDebug)
@@ -1737,6 +2064,16 @@ end
 
 function toggleAutostartOneWorld()
     autostartOneWorld = not autostartOneWorld
+    rebuildContextMenu()
+end
+
+function toggleMetricMode()
+    options.metricMode = not options.metricMode
+    for k, v in pairs(getAllObjects()) do
+        if v.getVar("className") == "MeasurementToken" or v.getVar("className") == "DNDMiniInjector_Mini" then
+            v.call("toggleMetricMode")
+        end
+    end
     rebuildContextMenu()
 end
 
@@ -1797,6 +2134,8 @@ function onUpdate()
                         if objClassName ~= "MiniInjector" and
                            objClassName ~= "MeasurementToken" and
                            objClassName ~= "MeasurementToken_Move" and
+                           objClassName ~= "DNDMiniInjector_Mini" and
+                           objClassName ~= "DNDMiniInjector_Mini_Move" and
                            objClassName ~= "MeasurementTool" then
                             if debuggingEnabled == true then
                                 print("[00ff00]Injecting[-] mini " .. object.getName() .. ".")
@@ -1806,7 +2145,7 @@ function onUpdate()
                             break
                         end
                     elseif self.getRotationValue() == "[ff0000]REMOVE[-]" then
-                        if object.getVar("className") == "MeasurementToken" then
+                        if object.getVar("className") == "MeasurementToken" or object.getVar("className") == "DNDMiniInjector_Mini" then
                             if debuggingEnabled == true then
                                 print("[ff0000]Removing[-] injection from " .. object.getName() .. ".")
                             end
@@ -1840,6 +2179,8 @@ function onUpdate()
                     objClassName = obj.getVar("className")
                     if objClassName ~= "MeasurementToken" and
                        objClassName ~= "MeasurementToken_Move" and
+                       objClassName ~= "DNDMiniInjector_Mini" and
+                       objClassName ~= "DNDMiniInjector_Mini_Move" and
                        objClassName ~= "MeasurementTool" then
                         print("[00ff00]Injecting[-] mini " .. obj.getName() .. ".")
                         injectToken(obj)
@@ -1860,7 +2201,7 @@ function onUpdate()
             for _, obj in ipairs(allObjects) do
                 if obj ~= self and obj ~= nil then
                     objClassName = obj.getVar("className")
-                    if objClassName == "MeasurementToken" then
+                    if objClassName == "MeasurementToken" or objClassName == "DNDMiniInjector_Mini" then
                         tokenVersion = obj.getVar("versionNumber")
                         if versionNumber ~= tokenVersion then
                             -- Wait for the mini to fully load before killing it
@@ -1894,7 +2235,7 @@ function onObjectSpawn(object)
             return true
         end
         if object.resting then
-            if object.getVar("className") ~= "MeasurementToken" then
+            if object.getVar("className") ~= "MeasurementToken" and object.getVar("className") ~= "DNDMiniInjector_Mini" then
                 return true
             end
             -- Wait for the mini to fully load before killing it
@@ -1908,7 +2249,7 @@ function onObjectSpawn(object)
         if object == nil then
             return
         end
-        if object.getVar("className") == "MeasurementToken" then
+        if object.getVar("className") == "MeasurementToken" or object.getVar("className") == "DNDMiniInjector_Mini" then
             tokenVersion = object.getVar("versionNumber")
             if versionNumber ~= tokenVersion then
                 print("[00ff00]Updating[-] spawned mini.")
@@ -2045,6 +2386,7 @@ function injectToken(object)
     local script = self.getLuaScript()
     local xml = script:sub(script:find("XMLStart")+8, script:find("XMLStop")-1)
     local newScript = script:sub(script:find("LUAStart")+8, script:find("LUAStop")-1)
+    newScript = newScript:gsub("--%[%[LUACommentRemove", "")
     local stats = "statNames = {"
     local xmlStats = ""
     for j,i in pairs(assets) do
@@ -2076,6 +2418,9 @@ function injectToken(object)
     end
     if options.alternateDiag == true then
         newScript = newScript:gsub("alternateDiag = false", "alternateDiag = true")
+    end
+    if options.metricMode == true then
+        newScript = newScript:gsub("metricMode = false", "metricMode = true")
     end
     if options.playerChar == true then
         newScript = newScript:gsub("player = false", "player = true")
@@ -2160,13 +2505,16 @@ function getInitiativeFigures()
             debug        = false,
         })
         for _, hitTable in ipairs(hitList) do
-            if hitTable ~= nil and hitTable.hit_object ~= nil and hitTable.hit_object.getVar("className") == "MeasurementToken" then
+            if hitTable ~= nil
+               and hitTable.hit_object ~= nil
+               and (hitTable.hit_object.getVar("className") == "MeasurementToken"
+                    or hitTable.hit_object.getVar("className") == "DNDMiniInjector_Mini") then
                 handleInitMiniature(hitTable.hit_object)
             end
         end
     else
         for k, v in pairs(getAllObjects()) do
-            if v.getVar("className") == "MeasurementToken" then
+            if v.getVar("className") == "MeasurementToken" or v.getVar("className") == "DNDMiniInjector_Mini" then
                 handleInitMiniature(v)
             end
         end

@@ -13,7 +13,7 @@
 # DND Mini Injector
 <img src="https://i.imgur.com/83uMYlZ.jpg" width="500">
 
-### Latest Version: 4.7.0
+### Latest Version: 4.7.6
 + **Injection.** 
   + Place a mini on the top of this panel to inject it, flip the panel over and place an injected mini on it to remove injection.
   + Removing injection does not remove saved settings for that mini.
@@ -30,8 +30,10 @@
   + If OneWorld is available on the table it will be automatically initialized shortly after the mini injector loads. This can be disabled in the right-click menu by turning off 'Auto-OneWorld'.
 + **Movement.**
   + When an injected mini is picked up a token 1 square wide will spawn underneath facing the player. That token shows distance with DND rules in 5 foot increments.
-  + All distances in these tools are with reference to the TTS square grid. Modifying that grid will affect the calculated distances.
+  + All distances in these tools are with reference to the TTS grid. Modifying that grid will affect the calculated distances.
   + Alternate diagonal measurement (1.5x) is available and can be toggled either on the injector or on the minis themselves.
+  + Metric mode can be toggled on the injector or on the minis themselves.
+  + Hex grids are supported by the mini injector.
 + **Automatic Resizing.**
   + Minis can be calibrated to grid size with the right-click menu. Size the mini to match the grid, then calibrate.
   + Whenever the measurement tool calibrates the grid, the mini spawns, or the mini exits a bag, it will be automatically resized to match the grid.
