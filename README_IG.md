@@ -10,7 +10,7 @@
 ### Full table with all these tools available [HERE](https://steamcommunity.com/sharedfiles/filedetails/?id=2455649013)
 
 # DND Mini Injector
-### Latest Version: 4.7.6
+### Latest Version: 4.7.7
 + **Injection.** 
   + Place a mini on the top of this panel to inject it, flip the panel over and place an injected mini on it to remove injection.
   + Removing injection does not remove saved settings for that mini.

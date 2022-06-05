@@ -1,6 +1,8 @@
 -- DNDMiniInjector
 -- Credit to HP Bar Writer by Kijan
 --[[LUAStart
+className = "DNDMiniInjector_Mini"
+versionNumber = "4.7.7"
 --[[LUAMoveStart
 move_const_gridTargetScale = 0.3
 move_const_sectionMultiplier = 5
@@ -69,7 +71,6 @@ end
 function updateCurrentLocation(newLocation)
     -- find Y of the floor directly below the mini's center point at the target location
     -- use that as the new location
-
     newLocation = Vector(newLocation.x, move_targetObject.getBounds().center.y, newLocation.z)
     local hitList = Physics.cast({
         origin       = newLocation,
@@ -172,7 +173,28 @@ function onUpdate()
        and math.abs(targetLoc.z - move_startLocation.z) < acceptDistance then
         resetMoves()
     end
-    -- the target has moved, see if it's nearby an adjacent location
+    -- the target has moved
+    -- see if it's outside the bounding box/circle
+    if Grid.type == 2 or Grid.type == 3 then
+        -- we are using hex grids, use a circle from start to determine bounding
+        local maxDistance = getFirstAdjacentLocation():distance(move_currentLocation)
+        local currentDistance = targetLoc:distance(move_currentLocation)
+        if currentDistance > maxDistance then
+            -- we are outside the bounding circle, move to closest adjacent
+            updateCurrentLocation(getClosestAdjacentLocation(targetLoc))
+        end
+    else
+        -- we are using square grids, use the square bounding box
+        local gd = getGridDims()
+        if targetLoc.x < move_currentLocation.x - gd.width or
+           targetLoc.x > move_currentLocation.x + gd.width or
+           targetLoc.z < move_currentLocation.z - gd.height or
+           targetLoc.z > move_currentLocation.z + gd.height then
+            -- we are outside the bounding box, move to closest adjacent
+            updateCurrentLocation(getClosestAdjacentLocation(targetLoc))
+        end
+    end
+    --see if it's nearby an adjacent location
     for i,point in ipairs(move_currentAdjacentLocations) do
         local testPoint = Vector(point.x, targetLoc.y, point.y)
         if testPoint:distance(targetLoc) < acceptDistance then
@@ -184,6 +206,26 @@ function onUpdate()
         end
     end
     move_lastTargetLoc = targetLoc
+end
+
+function getFirstAdjacentLocation()
+    for i,point in ipairs(move_currentAdjacentLocations) do
+        return Vector(point.x, self.getPosition().y, point.y)
+    end
+end
+
+function getClosestAdjacentLocation(testLocation)
+    local closestAdjacent = getFirstAdjacentLocation()
+    local closestDistance = closestAdjacent:distance(testLocation)
+    for i,point in ipairs(move_currentAdjacentLocations) do
+        local testAdjacent = Vector(point.x, testLocation.y, point.y)
+        local testDistance = testAdjacent:distance(testLocation)
+        if testDistance < closestDistance then
+            closestAdjacent = testAdjacent
+            closestDistance = testDistance
+        end
+    end
+    return closestAdjacent
 end
 
 function getAcceptDistance()
@@ -327,8 +369,6 @@ function getAdjacentLocations(currentX, currentY)
 end
 LUAMoveStop--lua]]
 --[[LUACommentRemove
-className = "DNDMiniInjector_Mini"
-versionNumber = "4.7.6"
 scaleMultiplierX = 1.0
 scaleMultiplierY = 1.0
 scaleMultiplierZ = 1.0
@@ -1877,7 +1917,7 @@ LUAStop--lua]]
 XMLStop--xml]]
 
 className = "MiniInjector"
-versionNumber = "4.7.6"
+versionNumber = "4.7.7"
 finishedLoading = false
 debuggingEnabled = false
 pingInitMinis = true
