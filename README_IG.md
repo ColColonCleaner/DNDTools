@@ -10,7 +10,7 @@
 ### Full table with all these tools available [HERE](https://steamcommunity.com/sharedfiles/filedetails/?id=2455649013)
 
 # DND Mini Injector
-### Latest Version: 4.7.7
+### Latest Version: 4.7.9
 + **Injection.** 
   + Place a mini on the top of this panel to inject it, flip the panel over and place an injected mini on it to remove injection.
   + Removing injection does not remove saved settings for that mini.
@@ -25,6 +25,7 @@
   + PC minis are always visible through fog of war.
   + NPC minis can be hidden from players via the right click menu.
   + If OneWorld is available on the table it will be automatically initialized shortly after the mini injector loads. This can be disabled in the right-click menu by turning off 'Auto-OneWorld'.
+  + Use the 'Show Mini UI' option on the injector to show/hide the floating UI on all minis at once.
 + **Movement.**
   + When an injected mini is picked up a token 1 square wide will spawn underneath facing the player. That token shows distance with DND rules in 5 foot increments.
   + All distances in these tools are with reference to the TTS grid. Modifying that grid will affect the calculated distances.
@@ -120,6 +121,7 @@
 + If OneWorld is not available/deployed it will use the default 'Custom Rectangle' table bounds.
 + Use 'Hide OW Minimaps' to hide the map objects that float above the table in the corner from your players.
 + Use 'Hide OW Hub' to hide the OneWorld hub from your players.
++ Use 'Remove All Fogs' to remove all fog objects from the table. IMPORTANT: Revealing everything inside a fog does NOT remove it! It needs to be actually removed from the table otherwise objects can end up hidden when they shouldn't be.
 
 # OneWorld GridSaver Tokens
 ### Latest Version: 2.1.0

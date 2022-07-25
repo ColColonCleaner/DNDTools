@@ -2,7 +2,7 @@
 -- Credit to HP Bar Writer by Kijan
 --[[LUAStart
 className = "DNDMiniInjector_Mini"
-versionNumber = "4.7.7"
+versionNumber = "4.7.9"
 --[[LUAMoveStart
 move_const_gridTargetScale = 0.3
 move_const_sectionMultiplier = 5
@@ -818,6 +818,7 @@ function loadStageTwo()
                         self.UI.setAttribute("addSubE", "visibility", "")
                         self.UI.setAttribute("editPanel", "visibility", "")
                     end
+                    self.UI.setAttribute("panel", "active", injOptions.showAll == true and "true" or "false")
                     coroutine.yield(0)
                     self.UI.setAttribute("editButton0", "visibility", "Black")
                     self.UI.setAttribute("leftSide1", "visibility", "Black")
@@ -1917,7 +1918,7 @@ LUAStop--lua]]
 XMLStop--xml]]
 
 className = "MiniInjector"
-versionNumber = "4.7.7"
+versionNumber = "4.7.9"
 finishedLoading = false
 debuggingEnabled = false
 pingInitMinis = true
@@ -2051,6 +2052,8 @@ function updateSettingUI()
             self.UI.setAttribute(opt, "textColor", "#FFFFFF")
         end
     end
+
+    toggleOnOff(true)
 end
 
 function initOneWorld()
@@ -2094,6 +2097,11 @@ function rebuildContextMenu()
         self.addContextMenuItem("[X] Debugging", toggleDebug)
     else
         self.addContextMenuItem("[ ] Debugging", toggleDebug)
+    end
+    if (options.showAll) then
+        self.addContextMenuItem("[X] Show Mini UI", toggleOnOff)
+    else
+        self.addContextMenuItem("[ ] Show Mini UI", toggleOnOff)
     end
 end
 
@@ -2368,10 +2376,11 @@ function toggleCheckBox(player, value, id)
 end
 
 function toggleHideBars(player, value, id)
+    options.hideAll = not options.hideAll
     for i,j in pairs(getAllObjects()) do
         if j ~= self and not j.getName():find("DND Mini Panel") then
-            if j.getLuaScript():find("StartXML") then
-                if not options.hideAll then
+            if j.getVar("className") == "DNDMiniInjector_Mini" then
+                if options.hideAll then
                     j.UI.setAttribute("resourceBar", "active", "false")
                     j.UI.setAttribute("resourceBarS", "active", "false")
                     j.UI.setAttribute("extraBar", "active", "false")
@@ -2388,23 +2397,17 @@ function toggleHideBars(player, value, id)
             end
         end
     end
-    options.hideAll = not options.hideAll
 end
 
 
-function toggleOnOff(player, value, id)
-    if self.UI.getAttribute(id, "value") == "false" then
-        self.UI.setAttribute(id, "value", "true")
-        options[id] = true
-    else
-        self.UI.setAttribute(id, "value", "false")
-        options[id] = false
+function toggleOnOff(skipToggle)
+    if skipToggle ~= true then
+        options.showAll = not options.showAll
+        rebuildContextMenu()
     end
     for i,j in pairs(getAllObjects()) do
-        if j ~= self then
-            if j.getLuaScript():find("StartXML") then
-                j.UI.setAttribute("panel", "active", options[id] == true and "true" or "false")
-            end
+        if j ~= self and j.getVar("className") == "DNDMiniInjector_Mini" then
+            j.UI.setAttribute("panel", "active", options.showAll == true and "true" or "false")
         end
     end
 end

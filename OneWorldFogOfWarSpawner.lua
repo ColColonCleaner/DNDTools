@@ -1,4 +1,4 @@
-
+versionNumber = "2.5.0"
 function onload(saved_data)
     self.clearButtons()
     self.createButton({
@@ -14,8 +14,25 @@ function onload(saved_data)
         font_color = {1,1,1}
     })
     self.clearContextMenu()
+    self.addContextMenuItem("Remove All Fogs", removeAllFogs, true)
     self.addContextMenuItem("Hide OW Minimaps", hideOWMinimaps, true)
     self.addContextMenuItem("Hide OW Hub", hideOWHub, true)
+    self.setName("OneWorld Fog-Of-War Spawner " .. versionNumber)
+end
+
+function removeAllFogs()
+    local counter = 0
+    for _, obj in ipairs(getAllObjects()) do
+        if obj ~= self and obj ~= nil and obj.type == "FogOfWar" then
+            obj.destruct()
+            counter = counter + 1
+        end
+    end
+    if counter > 0 then
+        print("Removed " .. counter .. " fogs!")
+    else
+        print("No fogs found!")
+    end
 end
 
 function hideOWMinimaps()
@@ -58,7 +75,7 @@ function hideOWMinimaps()
             HideWhenFaceDown = false,
             Hands = false,
             FogColor = "Black",
-            FogHidePointers = true,
+            FogHidePointers = false,
             FogReverseHiding = false,
             FogSeethrough = false,
             LuaScript = "",
@@ -115,7 +132,7 @@ function hideOWHub()
             HideWhenFaceDown = false,
             Hands = false,
             FogColor = "Black",
-            FogHidePointers = true,
+            FogHidePointers = false,
             FogReverseHiding = false,
             FogSeethrough = false,
             LuaScript = "",
@@ -130,16 +147,63 @@ function buttonClick_spawnFOW()
     local vars = getMapVars(true)
     local thickness = vars.bounds.y
     vars.bounds.y = 20
-    spawnObject({
-        type = "FogOfWar",
+
+    spawnObjectData({
+        data = {
+            Name = "FogOfWar",
+            Transform = {
+                posX = 0,
+                posY = 0,
+                posZ = 0,
+                rotX = 0,
+                rotY = 0,
+                rotZ = 0,
+                scaleX = 1,
+                scaleY = 1,
+                scaleZ = 1
+            },
+            Nickname = "",
+            Description = "",
+            GMNotes = "",
+            ColorDiffuse = {
+                r = 0.25,
+                g = 0.25,
+                b = 0.25,
+                a = 0.1025644
+            },
+            LayoutGroupSortIndex = 0,
+            Value = 0,
+            Locked = true,
+            Grid = true,
+            Snap = true,
+            IgnoreFoW = false,
+            MeasureMovement = false,
+            DragSelectable = true,
+            Autoraise = true,
+            Sticky = true,
+            Tooltip = true,
+            GridProjection = false,
+            HideWhenFaceDown = false,
+            Hands = false,
+            FogOfWar = {
+                HideGmPointer = false,
+                HideObjects = true,
+                ReHideObjects = false,
+                Height = 0,
+                RevealedLocations = {}
+            },
+            LuaScript = "",
+            LuaScriptState = "",
+            XmlUI = ""
+        },
         position = {vars.position.x, 100, vars.position.z},
         rotation = {0, 0, 0},
         scale = vars.bounds,
-        sound = true,
+        sound = false,
         callback_function = function(spawned_object)
             spawned_object.setPositionSmooth({vars.position.x, vars.position.y + (thickness/2.0) + 9.88, vars.position.z})
         end
-    });
+    })
 end
 
 function getOneWorldHub()
