@@ -408,6 +408,7 @@ options = {
     showBaseButtons = false,
     showBarButtons = false,
     hideHp = false,
+    hideInitiative = false,
     hideMana = true,
     hideExtra = true,
     incrementBy = 1,
@@ -738,6 +739,7 @@ function loadStageTwo()
     self.UI.setAttribute("MetricModeToggle", "textColor", metricMode == true and "#AA2222" or "#FFFFFF")
     self.UI.setAttribute("StabilizeToggle", "textColor", stabilizeOnDrop == true and "#AA2222" or "#FFFFFF")
     self.UI.setAttribute("HH", "textColor", options.hideHp == true and "#AA2222" or "#FFFFFF")
+    self.UI.setAttribute("HI", "textColor", options.hideInitiative == true and "#AA2222" or "#FFFFFF")
     self.UI.setAttribute("HM", "textColor", options.hideMana == true and "#AA2222" or "#FFFFFF")
     self.UI.setAttribute("HE", "textColor", options.hideExtra == true and "#AA2222" or "#FFFFFF")
     self.UI.setAttribute("HB", "textColor", options.showBarButtons == true and "#AA2222" or "#FFFFFF")
@@ -1508,6 +1510,11 @@ function onClick(player_in, value, id)
             self.UI.setAttribute("resourceBar", "active", options.hideHp == true and "False" or "True")
             self.UI.setAttribute("bars", "height", vertical + (options.hideHp == true and -100 or 100))
         end, 1)
+    elseif id == "HI" then
+	    options.hideInitiative = not options.hideInitiative
+        Wait.frames(function()
+                self.UI.setAttribute("HI", "textColor", options.hideInitiative == true and "#AA2222" or "#FFFFFF")
+        end, 1)
     elseif id == "HM" then
         options.hideMana = not options.hideMana
         local vertical = self.UI.getAttribute("bars", "height")
@@ -1817,7 +1824,7 @@ LUAStop--lua]]
             </Panel>
         </Panel>
     </VerticalLayout>
-    <Panel id="editPanel" height="1620" width="800" color="#330000FF" position="0 1290 0" active="False">
+    <Panel id="editPanel" height="1742" width="800" color="#330000FF" position="0 1290 0" active="False">
         <ProgressBar id="blackBackground" visibility="" height="1620" width="800" showPercentageText="false" color="#330000FF" percentage="100" fillImageColor="#330000FF" position="0 -320 0"></ProgressBar>
         <HorizontalLayout>
             <VerticalLayout>
@@ -1849,8 +1856,9 @@ LUAStop--lua]]
                     <Button id="BZ" fontSize="70" text="Below Zero" color="#000000FF"></Button>
                     <Button id="AM" fontSize="70" text="Above Max" color="#000000FF"></Button>
                 </HorizontalLayout>
-                <HorizontalLayout minheight="100">
-                    <Button id="HH" fontSize="70" text="Hide Health Bar" color="#000000FF"></Button>
+                <HorizontalLayout minheight="160">
+                    <Button id="HH" fontSize="70" text="Hide Health" color="#000000FF"></Button>
+                    <Button id="HI" fontSize="70" text="Hide Initiative" color="#000000FF"></Button>
                 </HorizontalLayout>
                 <HorizontalLayout minheight="100">
                     <Button id="HM" fontSize="70" text="Hide Bar 2" color="#000000FF"></Button>
@@ -1922,6 +1930,8 @@ versionNumber = "4.7.9"
 finishedLoading = false
 debuggingEnabled = false
 pingInitMinis = true
+displayNPCInitiative = true
+displayInitiative = true
 autostartOneWorld = true
 initTableOnly = true
 hideUpsideDownMinis = true
@@ -1961,6 +1971,8 @@ function onSave()
     local save_state = JSON.encode({
         debugging_enabled = debuggingEnabled,
         ping_init_minis = pingInitMinis,
+        display_npc_initiative = displayNPCInitiative,
+        display_initiative = displayInitiative,
         autostart_oneworld = autostartOneWorld,
         init_table_only = initTableOnly,
         auto_calibrate_enabled = autoCalibrateEnabled,
@@ -2004,6 +2016,12 @@ function onLoad(save_state)
             end
             if saved_data.ping_init_minis ~= nil then
                 pingInitMinis = saved_data.ping_init_minis
+            end
+            if saved_data.display_npc_initiative ~= nil then
+                displayNPCInitiative = saved_data.display_npc_initiative
+            end
+            if saved_data.display_initiative ~= nil then
+                displayInitiative = saved_data.display_initiative
             end
             if saved_data.autostart_oneworld ~= nil then
                 autostartOneWorld = saved_data.autostart_oneworld
@@ -2072,6 +2090,16 @@ function rebuildContextMenu()
     else
         self.addContextMenuItem("[ ] Ping Init Minis", togglePingInitMinis)
     end
+    if (displayNPCInitiative) then
+        self.addContextMenuItem("[X] Display NPC Init", toggleDisplayNPCInitiative)
+    else
+        self.addContextMenuItem("[ ] Display NPC Init", toggleDisplayNPCInitiative)
+    end
+    if (displayInitiative) then
+        self.addContextMenuItem("[X] Display Initiative", toggleDisplayInitiative)
+    else
+        self.addContextMenuItem("[ ] Display Initiative", toggleDisplayInitiative)
+    end
     if (initTableOnly) then
         self.addContextMenuItem("[X] Init Table Only", toggleInitTableOnly)
     else
@@ -2127,6 +2155,16 @@ end
 
 function togglePingInitMinis()
     pingInitMinis = not pingInitMinis
+    rebuildContextMenu()
+end
+
+function toggleDisplayNPCInitiative()
+    displayNPCInitiative = not displayNPCInitiative
+    rebuildContextMenu()
+end
+
+function toggleDisplayInitiative() 
+    displayInitiative = not displayInitiative
     rebuildContextMenu()
 end
 
@@ -2894,13 +2932,18 @@ function updateInitPlayerBackward(player)
     end
 end
 
+--Format each result into a string that goes into notes
 function setInitiativeNotes()
-    --Format each result into a string that goes into notes
+    --Ensures we still display round count when initiative displaying is disabled
     local noteString = "[CFCFCF]-------- INITIATIVE --------\n-------- ROUND " .. options.initCurrentRound .. " ---------\n-----------------------------\n[-]"
-    for i, figure in ipairs(initFigures) do
-        noteString = noteString .. getInitiativeString(figure)
+    if displayInitiative == true then
+        for i, figure in ipairs(initFigures) do
+            if figure.options.hideInitiative == false and (figure.player == true or displayNPCInitiative == true) then
+                noteString = noteString .. getInitiativeString(figure)
+            end
+        end
+        noteString = noteString .. "[CFCFCF]-----------------------------[-]"
     end
-    noteString = noteString .. "[CFCFCF]-----------------------------[-]"
     --Put that string into notes
     setNotes(noteString)
 end
